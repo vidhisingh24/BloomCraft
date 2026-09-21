@@ -17,10 +17,27 @@ import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { Footer } from './components/Footer';
 import type { Product } from './data/products';
 
+const INTRO_STORAGE_KEY = 'bloomcraft_intro_shown_v1';
+
 export function AppContent() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return !sessionStorage.getItem(INTRO_STORAGE_KEY);
+    } catch {
+      return true;
+    }
+  });
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleSplashComplete = () => {
+    try {
+      sessionStorage.setItem(INTRO_STORAGE_KEY, 'true');
+    } catch {
+      // sessionStorage unavailable/ignored in sandboxed environments
+    }
+    setShowSplash(false);
+  };
 
   // Listen for custom navigation events
   useEffect(() => {
@@ -36,9 +53,9 @@ export function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#3D272A] relative selection:bg-[#FFE3E8] selection:text-[#C0536A]">
-      {/* 1. Opening Animation (Rose Petals + Brand Reveal) */}
+      {/* 1. Opening Animation (Rose Petals + Brand Reveal + Crochet Story) */}
       {showSplash && (
-        <IntroSplash onComplete={() => setShowSplash(false)} />
+        <IntroSplash onComplete={handleSplashComplete} />
       )}
 
       {/* Main Website Structure */}
@@ -48,7 +65,10 @@ export function AppContent() {
         <Navbar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onReplaySplash={() => setShowSplash(true)}
+          onReplaySplash={() => {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            setShowSplash(true);
+          }}
         />
 
         {/* Dynamic Pages / Views */}
@@ -121,7 +141,10 @@ export function AppContent() {
         {/* Footer */}
         <Footer
           onNavigate={(tab) => setActiveTab(tab)}
-          onReplaySplash={() => setShowSplash(true)}
+          onReplaySplash={() => {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            setShowSplash(true);
+          }}
         />
       </div>
     </div>
