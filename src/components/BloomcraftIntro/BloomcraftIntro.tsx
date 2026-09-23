@@ -142,21 +142,19 @@ export const BloomcraftIntro: React.FC<BloomcraftIntroProps> = ({ onComplete }) 
         </div>
       )}
 
-      {/* Stage 2: 3 Editorial Crochet Story Slides */}
+      {/* Stage 2: 3 Editorial Full-Page Crochet Story Slides */}
       {phase !== 'logo' && (
-        <div className="relative z-20 w-full flex items-center justify-center animate-fade-in">
-          <StorySlides
-            currentSlideIndex={currentSlideIndex}
-            onSelectSlide={handleSelectSlide}
-          />
-        </div>
+        <StorySlides
+          currentSlideIndex={currentSlideIndex}
+          onSelectSlide={handleSelectSlide}
+        />
       )}
 
       {/* Skip Intro Button */}
       <button
         onClick={handleFinishIntro}
         aria-label="Skip cinematic introduction and enter store"
-        className="absolute top-6 right-6 sm:bottom-8 sm:top-auto sm:right-8 z-30 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-[#7A5B62] bg-white/85 hover:bg-white hover:text-[#C0536A] backdrop-blur-md rounded-full border border-rose-200/80 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C0536A]"
+        className="absolute top-6 right-6 z-40 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white/95 bg-black/30 hover:bg-black/50 hover:text-white backdrop-blur-md rounded-full border border-white/35 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 cursor-pointer"
       >
         <span>Skip intro</span>
         <ArrowRight className="w-3.5 h-3.5" />
