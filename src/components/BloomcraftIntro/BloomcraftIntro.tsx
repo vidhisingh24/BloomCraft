@@ -132,14 +132,15 @@ export const BloomcraftIntro: React.FC<BloomcraftIntroProps> = ({ onComplete }) 
         dense={true}
       />
 
-      {/* Ambient Floral Radial Glow */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.85)_0%,rgba(255,240,243,0.4)_50%,transparent_80%)] z-10" />
-
       {/* Stage 1: Explosive Logo Reveal */}
       {phase === 'logo' && (
-        <div className="relative z-20 w-full flex items-center justify-center">
-          <LogoReveal isVisible={true} />
-        </div>
+        <>
+          {/* Ambient Floral Radial Glow (Only during logo phase) */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.85)_0%,rgba(255,240,243,0.4)_50%,transparent_80%)] z-10" />
+          <div className="relative z-20 w-full flex items-center justify-center">
+            <LogoReveal isVisible={true} />
+          </div>
+        </>
       )}
 
       {/* Stage 2: 3 Editorial Full-Page Crochet Story Slides */}
@@ -154,7 +155,7 @@ export const BloomcraftIntro: React.FC<BloomcraftIntroProps> = ({ onComplete }) 
       <button
         onClick={handleFinishIntro}
         aria-label="Skip cinematic introduction and enter store"
-        className="absolute top-6 right-6 z-40 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-white/95 bg-black/30 hover:bg-black/50 hover:text-white backdrop-blur-md rounded-full border border-white/35 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 cursor-pointer"
+        className="absolute top-6 right-6 z-40 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-medium text-[#7A5B62] bg-white/85 hover:bg-white hover:text-[#C0536A] backdrop-blur-md rounded-full border border-rose-200/80 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C0536A] cursor-pointer"
       >
         <span>Skip intro</span>
         <ArrowRight className="w-3.5 h-3.5" />

@@ -18,7 +18,7 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden flex flex-col items-center justify-center">
-      {/* Full-Page Background Images Layer */}
+      {/* Full-Page Background Images Layer - True HD & Natural Colors without milky haze */}
       {INTRO_SLIDES.map((slide: IntroSlideData, index: number) => {
         const isActive = index === currentSlideIndex;
         const isError = imageErrors[slide.id];
@@ -32,26 +32,25 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
               isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'
             }`}
           >
-            {/* Full-bleed high quality background image with slow Ken-Burns pan/zoom */}
+            {/* Full-bleed crisp HD background image with slow Ken-Burns pan/zoom */}
             <img
               src={imageSrc}
               alt={slide.alt}
               onError={() => handleImageError(slide.id)}
               className={`w-full h-full object-cover object-center transform transition-transform duration-[6000ms] ease-out ${
-                isActive ? 'scale-[1.08]' : 'scale-100'
+                isActive ? 'scale-[1.06]' : 'scale-100'
               }`}
               loading="eager"
             />
 
-            {/* Cinematic Luxury Dark Scrim & Romantic Rosy Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1A0C10]/85 via-[#251016]/45 to-[#1A0C10]/65 pointer-events-none" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.15)_0%,rgba(26,12,16,0.75)_100%)] pointer-events-none" />
+            {/* Subtle soft edge vignette for natural framing without washing out colors */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/20 pointer-events-none" />
           </div>
         );
       })}
 
-      {/* Centered Poetic Message Overlay */}
-      <div className="relative z-20 w-full max-w-4xl mx-auto px-6 sm:px-8 py-8 flex flex-col items-center justify-center text-center">
+      {/* Centered Poetic Message Card with Signature Brand Pink & Berry Typography */}
+      <div className="relative z-20 w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 flex flex-col items-center justify-center text-center">
         {INTRO_SLIDES.map((slide: IntroSlideData, index: number) => {
           const isActive = index === currentSlideIndex;
 
@@ -60,34 +59,34 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
           return (
             <div
               key={`content-${slide.id}`}
-              className="flex flex-col items-center justify-center text-center animate-fade-in max-w-2xl mx-auto"
+              className="w-full max-w-xl sm:max-w-2xl bg-white/85 sm:bg-white/90 backdrop-blur-xl rounded-3xl border border-white/90 shadow-2xl shadow-[#3D272A]/15 px-6 py-8 sm:px-10 sm:py-10 flex flex-col items-center justify-center text-center animate-fade-in transform transition-all duration-700"
             >
-              {/* Floating Glassmorphism Badge */}
-              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/35 shadow-lg shadow-black/20 mb-6 sm:mb-8 transform transition-transform duration-700 hover:scale-105">
-                <span className="text-xs sm:text-sm font-bold tracking-widest text-[#FFCCD5] font-mono">
+              {/* Brand Rose Badge */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/70 shadow-sm mb-4 sm:mb-6">
+                <span className="text-xs sm:text-sm font-bold tracking-wider text-[#C0536A] font-mono">
                   {slide.stepNumber} / 03
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F4A6B7]" />
-                <span className="text-[11px] sm:text-xs uppercase tracking-[0.22em] text-white/95 font-semibold font-sans">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C0536A]" />
+                <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[#C0536A] font-bold font-sans">
                   {slide.badge}
                 </span>
               </div>
 
-              {/* Main Heading (Full Page Statement) */}
-              <h2 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-[1.1] mb-5 sm:mb-6 drop-shadow-[0_4px_28px_rgba(0,0,0,0.65)] select-none">
+              {/* Main Heading - Dark Espresso Berry Text */}
+              <h2 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-[#3D272A] tracking-tight leading-[1.15] mb-3 sm:mb-4 select-none">
                 {slide.title}
               </h2>
 
-              {/* Poetic Message */}
-              <p className="text-lg sm:text-2xl md:text-3xl text-rose-100/95 font-light leading-relaxed max-w-xl mx-auto drop-shadow-[0_2px_14px_rgba(0,0,0,0.6)] font-sans">
+              {/* Poetic Message - Signature Dark Rose / Mauve */}
+              <p className="text-base sm:text-xl md:text-2xl text-[#7A5B62] font-normal leading-relaxed max-w-lg mx-auto font-sans">
                 {slide.message}
               </p>
 
               {/* Delicate Floral Divider */}
-              <div className="mt-8 sm:mt-10 flex items-center justify-center gap-4 text-rose-300/85">
-                <span className="h-px w-16 sm:w-24 bg-gradient-to-r from-transparent via-rose-300/70 to-rose-300/20" />
-                <span className="text-lg sm:text-xl filter drop-shadow-md">🌸</span>
-                <span className="h-px w-16 sm:w-24 bg-gradient-to-l from-transparent via-rose-300/70 to-rose-300/20" />
+              <div className="mt-5 sm:mt-7 flex items-center justify-center gap-3 text-[#D96B82]/70">
+                <span className="h-px w-14 sm:w-20 bg-gradient-to-r from-transparent to-[#D96B82]/50" />
+                <span className="text-base filter drop-shadow-sm">🌸</span>
+                <span className="h-px w-14 sm:w-20 bg-gradient-to-l from-transparent to-[#D96B82]/50" />
               </div>
             </div>
           );
@@ -95,7 +94,7 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
       </div>
 
       {/* Slide Navigation & Progress Indicator at Bottom */}
-      <div className="absolute bottom-8 sm:bottom-12 z-30 flex items-center gap-3">
+      <div className="absolute bottom-6 sm:bottom-10 z-30 flex items-center gap-2.5 bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/90 shadow-md">
         {INTRO_SLIDES.map((slide, index) => {
           const isActive = index === currentSlideIndex;
           const isPassed = index < currentSlideIndex;
@@ -105,14 +104,14 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
               key={slide.id}
               onClick={() => onSelectSlide?.(index)}
               aria-label={`Go to slide ${index + 1}`}
-              className="relative h-2.5 rounded-full transition-all duration-500 overflow-hidden backdrop-blur-md focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 shadow-md cursor-pointer"
+              className="relative h-2 rounded-full transition-all duration-500 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C0536A] cursor-pointer"
               style={{
-                width: isActive ? '48px' : '18px',
-                backgroundColor: isPassed ? '#F4A6B7' : 'rgba(255, 255, 255, 0.35)',
+                width: isActive ? '42px' : '16px',
+                backgroundColor: isPassed ? '#D96B82' : 'rgba(217, 107, 130, 0.25)',
               }}
             >
               {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#F4A6B7] to-white rounded-full animate-progress-fill" />
+                <div className="absolute inset-0 bg-[#D96B82] rounded-full animate-progress-fill" />
               )}
             </button>
           );
