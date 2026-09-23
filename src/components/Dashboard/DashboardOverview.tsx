@@ -64,7 +64,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </h1>
           </div>
           <p className="text-sm text-[#7A5B62] font-medium">
-            Here's what's happening with your handmade creations and orders today.
+            Here's what's happening with your orders today.
           </p>
         </div>
 

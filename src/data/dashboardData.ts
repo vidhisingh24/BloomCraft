@@ -309,7 +309,7 @@ export const INITIAL_PRODUCTS: DashboardProduct[] = [
     price: 299,
     image: 'https://images.unsplash.com/photo-1558877385-81a1c7e67d72?auto=format&fit=crop&w=400&q=80',
     inStock: true,
-    tags: ['Most Loved', 'Amigurumi'],
+    tags: ['Amigurumi'],
     description: 'Snuggly little teddy bear charm with embroidered features and blush bowtie.',
   },
   {
