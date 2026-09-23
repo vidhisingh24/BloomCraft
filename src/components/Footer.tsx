@@ -127,6 +127,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onReplaySplash }) =>
                   Customize
                 </button>
               </li>
+              <li className="pt-1 border-t border-rose-100">
+                <button
+                  onClick={() => {
+                    onNavigate('dashboard');
+                    scrollToTop();
+                  }}
+                  className="text-[#C0536A] hover:text-[#D96B82] font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  <span>🌸</span>
+                  <span>Maker Studio</span>
+                </button>
+              </li>
             </ul>
           </div>
 

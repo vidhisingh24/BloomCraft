@@ -10,6 +10,7 @@ import { CraftStory } from './components/CraftStory';
 import { KeychainsPage } from './components/KeychainsPage';
 import { BouquetsPage } from './components/BouquetsPage';
 import { CustomizePage } from './components/CustomizePage';
+import { DashboardLayout } from './components/Dashboard';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
 import { ProductModal } from './components/ProductModal';
@@ -50,6 +51,18 @@ export function AppContent() {
     window.addEventListener('nav-to', handleCustomNav);
     return () => window.removeEventListener('nav-to', handleCustomNav);
   }, []);
+
+  // If in Dashboard View, render the Maker Studio space
+  if (activeTab === 'dashboard') {
+    return (
+      <DashboardLayout
+        onExitDashboard={() => {
+          setActiveTab('home');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#3D272A] relative selection:bg-[#FFE3E8] selection:text-[#C0536A]">

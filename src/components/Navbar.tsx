@@ -112,6 +112,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               )}
             </button>
 
+            {/* Maker Studio Dashboard Entry */}
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/80 border border-[#F4A6B7]/40 transition-all cursor-pointer"
+              title="Open Maker Studio Dashboard"
+            >
+              <span>🌸</span>
+              <span>Studio</span>
+            </button>
+
             {/* Desktop WhatsApp Order CTA Button */}
             <a
               href={getWhatsAppUrl()}
@@ -172,6 +182,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               </span>
               <span className="text-xs font-semibold px-2 py-0.5 bg-[#FFE3E8] text-[#D96B82] rounded-full">
                 {totalItems} items
+              </span>
+            </button>
+
+            <button
+              onClick={() => handleNavClick('dashboard')}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-[#FFE3E8]/80 text-[#C0536A] font-semibold"
+            >
+              <span className="flex items-center gap-2">
+                <span>🌸</span>
+                Maker Studio Dashboard
+              </span>
+              <span className="text-[10px] px-2 py-0.5 bg-white text-[#C0536A] rounded-full">
+                Admin
               </span>
             </button>
 
