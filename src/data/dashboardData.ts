@@ -283,6 +283,36 @@ export const INITIAL_CUSTOM_REQUESTS: DashboardCustomRequest[] = [
 
 export const INITIAL_PRODUCTS: DashboardProduct[] = [
   {
+    id: 'kc-tulip-pink-duo',
+    name: 'Baby Pink Double Tulip Bell Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/tulip_pink_duo.jpg',
+    inStock: true,
+    tags: ['Pastel Love', 'Handmade'],
+    description: 'Delicate soft pastel baby pink twin tulip bells crocheted with tender milk cotton yarn.',
+  },
+  {
+    id: 'kc-tulip-white-duo',
+    name: 'Pure White Double Tulip Bell Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/tulip_white_duo.jpg',
+    inStock: true,
+    tags: ['Classic White', 'Handmade'],
+    description: 'Serene pure ivory white twin tulip blossoms with emerald green crocheted bow.',
+  },
+  {
+    id: 'kc-tulip-coral-duo',
+    name: 'Coral Red Twin Tulip Bell Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/tulip_coral_duo.jpg',
+    inStock: true,
+    tags: ['Bright Bloom', 'Handmade'],
+    description: 'Bright cheerful coral red twin tulip bells suspended from a hand-crocheted green vine stem.',
+  },
+  {
     id: 'kc-tulip-white-magenta',
     name: 'White & Magenta Tulip Bell Pair',
     category: 'Keychains',
