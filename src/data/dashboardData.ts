@@ -283,6 +283,36 @@ export const INITIAL_CUSTOM_REQUESTS: DashboardCustomRequest[] = [
 
 export const INITIAL_PRODUCTS: DashboardProduct[] = [
   {
+    id: 'kc-daisy-yellow-white',
+    name: 'Sunny Yellow & White Daisy Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/daisy_yellow_white.jpg',
+    inStock: true,
+    tags: ['Bestseller', 'Handmade'],
+    description: 'Handcrafted iconic cottagecore daisy charm with sunny golden center and pure white blooming scalloped petals.',
+  },
+  {
+    id: 'kc-daisy-purple-lavender',
+    name: 'Royal Purple & Lavender Daisy Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/daisy_purple_lavender.jpg',
+    inStock: true,
+    tags: ['Two-Tone', 'Handmade'],
+    description: 'Two-tone floral daisy charm featuring deep royal purple scalloped petals and a soft lavender center disc.',
+  },
+  {
+    id: 'kc-daisy-purple-white',
+    name: 'Royal Purple & White Daisy Charm',
+    category: 'Keychains',
+    price: 120,
+    image: '/images/keychains/daisy_purple_white.jpg',
+    inStock: true,
+    tags: ['Contrast Edit', 'Handmade'],
+    description: 'Stunning contrast daisy keychain crafted with deep purple center and crisp white layered petals.',
+  },
+  {
     id: 'kc-daisy-magenta-white',
     name: 'Magenta & White Daisy Charm',
     category: 'Keychains',
