@@ -26,17 +26,17 @@ export const CartDrawer: React.FC = () => {
         className="absolute inset-0 bg-[#3D272A]/40 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-md bg-[#FFFDFB] shadow-2xl border-l border-[#F4A6B7]/30 flex flex-col">
           
           {/* Header */}
-          <div className="p-6 bg-gradient-to-r from-[#FFE3E8]/60 to-[#FFF0F3] border-b border-rose-100 flex items-center justify-between">
+          <div className="p-4 sm:p-6 bg-gradient-to-r from-[#FFE3E8]/60 to-[#FFF0F3] border-b border-rose-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#D96B82]">
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-serif text-xl font-bold text-[#3D272A]">Your Bloom Cart</h2>
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#3D272A]">Your Bloom Cart</h2>
                 <p className="text-xs text-[#7A5B62]">
                   {cart.length === 0 ? 'Cart is empty' : `${cart.length} unique handcrafted ${cart.length === 1 ? 'item' : 'items'}`}
                 </p>
@@ -45,7 +45,7 @@ export const CartDrawer: React.FC = () => {
 
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-2 rounded-full text-[#5C3E45] hover:bg-white/80 transition-colors"
+              className="p-2 rounded-full text-[#5C3E45] hover:bg-white/80 transition-colors cursor-pointer"
               aria-label="Close cart"
             >
               <X className="w-5 h-5" />
@@ -53,7 +53,7 @@ export const CartDrawer: React.FC = () => {
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {cart.length === 0 ? (
               <div className="py-16 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-[#FFE3E8] flex items-center justify-center mx-auto text-2xl">
@@ -181,7 +181,7 @@ export const CartDrawer: React.FC = () => {
 
           {/* Footer & Checkout button */}
           {cart.length > 0 && (
-            <div className="p-6 bg-white border-t border-rose-100 shadow-lg space-y-4">
+            <div className="p-4 sm:p-6 bg-white border-t border-rose-100 shadow-lg space-y-3 sm:space-y-4">
               <div className="space-y-1.5 text-xs text-[#5C3E45]">
                 <div className="flex justify-between">
                   <span>Subtotal</span>

@@ -59,26 +59,26 @@ export const StorySlides: React.FC<StorySlidesProps> = ({
           return (
             <div
               key={`content-${slide.id}`}
-              className="w-full max-w-xl sm:max-w-2xl bg-white/85 sm:bg-white/90 backdrop-blur-xl rounded-3xl border border-white/90 shadow-2xl shadow-[#3D272A]/15 px-6 py-8 sm:px-10 sm:py-10 flex flex-col items-center justify-center text-center animate-fade-in transform transition-all duration-700"
+              className="w-full max-w-xl sm:max-w-2xl bg-white/85 sm:bg-white/90 backdrop-blur-xl rounded-3xl border border-white/90 shadow-2xl shadow-[#3D272A]/15 px-4 py-6 sm:px-10 sm:py-10 flex flex-col items-center justify-center text-center animate-fade-in transform transition-all duration-700 mx-3 sm:mx-auto"
             >
               {/* Brand Rose Badge */}
-              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/70 shadow-sm mb-4 sm:mb-6">
-                <span className="text-xs sm:text-sm font-bold tracking-wider text-[#C0536A] font-mono">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/70 shadow-sm mb-3 sm:mb-6">
+                <span className="text-[11px] sm:text-sm font-bold tracking-wider text-[#C0536A] font-mono">
                   {slide.stepNumber} / 03
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#C0536A]" />
-                <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[#C0536A] font-bold font-sans">
+                <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#C0536A] font-bold font-sans">
                   {slide.badge}
                 </span>
               </div>
 
               {/* Main Heading - Dark Espresso Berry Text */}
-              <h2 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-[#3D272A] tracking-tight leading-[1.15] mb-3 sm:mb-4 select-none">
+              <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#3D272A] tracking-tight leading-[1.15] mb-2.5 sm:mb-4 select-none">
                 {slide.title}
               </h2>
 
               {/* Poetic Message - Signature Dark Rose / Mauve */}
-              <p className="text-base sm:text-xl md:text-2xl text-[#7A5B62] font-normal leading-relaxed max-w-lg mx-auto font-sans">
+              <p className="text-xs sm:text-lg md:text-xl text-[#7A5B62] font-normal leading-relaxed max-w-lg mx-auto font-sans">
                 {slide.message}
               </p>
 

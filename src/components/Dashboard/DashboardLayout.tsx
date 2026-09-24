@@ -122,6 +122,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
         </div>
       </div>
 
+      {/* Mobile Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="md:hidden fixed inset-0 z-35 bg-black/40 backdrop-blur-xs transition-opacity"
+        />
+      )}
+
       {/* Sidebar for Desktop & Mobile Overlay */}
       <aside
         className={`fixed md:sticky top-0 left-0 z-40 h-screen w-64 bg-[#FFFDFB] border-r border-[#F4A6B7]/30 flex flex-col justify-between p-5 transition-transform duration-300 md:translate-x-0 ${

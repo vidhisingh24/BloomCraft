@@ -120,9 +120,100 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
         </div>
       </div>
 
-      {/* Orders Table & Cards */}
+      {/* Orders Container: Mobile Cards (< md) + Desktop Table (>= md) */}
       <div className="bg-white/95 rounded-3xl border border-[#F4A6B7]/30 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Cards */}
+        <div className="block md:hidden divide-y divide-rose-100/70 p-4 space-y-4">
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-10 text-[#7A5B62]">
+              <span className="text-3xl">🌸</span>
+              <p className="font-serif font-bold text-sm text-[#3D272A] mt-2">No orders found</p>
+              <p className="text-xs text-[#A4838B]">No orders matching your active filter.</p>
+            </div>
+          ) : (
+            filteredOrders.map((order) => (
+              <div key={`m-${order.id}`} className="pt-4 first:pt-0 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm text-[#C0536A]">{order.id}</span>
+                    <span className="text-[10px] text-[#A4838B]">• {order.date}</span>
+                  </div>
+                  <div className="relative inline-block">
+                    <select
+                      value={order.status}
+                      onChange={(e) => onUpdateOrderStatus(order.id, e.target.value as OrderStatus)}
+                      className={`appearance-none px-3 py-1 pr-6 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none shadow-sm ${getStatusBadge(
+                        order.status
+                      )}`}
+                    >
+                      <option value="New">New</option>
+                      <option value="Preparing">Preparing</option>
+                      <option value="Ready">Ready</option>
+                      <option value="Delivered">Delivered</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-[#3D272A]">{order.customerName}</p>
+                    <p className="text-[11px] text-[#A4838B] font-mono">{order.phone}</p>
+                  </div>
+                  <a
+                    href={`https://wa.me/${order.phone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(
+                      order.customerName
+                    )},%20this%20is%20Bloomcraft%20regarding%20your%20crochet%20order%20${order.id}🌸`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+
+                <div className="space-y-2 bg-[#FFFDFB] p-3 rounded-2xl border border-rose-100/70">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2.5">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-10 h-10 rounded-xl object-cover border border-rose-200 bg-[#FFF0F3] shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-xs text-[#3D272A] truncate">
+                          {item.quantity}x {item.name}
+                        </p>
+                        {item.color && (
+                          <p className="text-[10px] text-[#C0536A] font-medium">{item.color}</p>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-[#3D272A]">₹{item.price * item.quantity}</span>
+                    </div>
+                  ))}
+                  {order.notes && (
+                    <p className="text-[10px] text-[#7A5B62] pt-1.5 border-t border-rose-100">
+                      <span className="font-semibold text-[#C0536A]">Note: </span>
+                      {order.notes}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-stone-100 text-[#5C3E45] font-semibold text-[10px] border border-stone-200">
+                    <span>{getDeliveryIcon(order.deliveryMethod)}</span>
+                    <span>{order.deliveryMethod}</span>
+                  </span>
+                  <p className="font-bold text-sm text-[#C0536A]">Total: ₹{order.total}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FAF8F5] text-[#7A5B62] uppercase tracking-wider font-semibold border-b border-[#F4A6B7]/20">
               <tr>

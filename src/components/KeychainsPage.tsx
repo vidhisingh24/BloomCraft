@@ -109,13 +109,13 @@ export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct })
               />
             </button>
 
-            {/* Quick View Button on Hover */}
+            {/* Quick View Button - Accessible on touch mobile and desktop hover */}
             <button
               onClick={() => onSelectProduct(product)}
-              className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 px-3.5 py-1.5 bg-white/95 backdrop-blur-md text-[#3D272A] hover:text-[#C0536A] text-xs font-semibold rounded-full shadow-md flex items-center gap-1.5 cursor-pointer"
+              className="absolute bottom-2.5 sm:bottom-3 left-1/2 -translate-x-1/2 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 px-3 py-1 sm:px-3.5 sm:py-1.5 bg-white/95 backdrop-blur-md text-[#3D272A] hover:text-[#C0536A] text-[11px] sm:text-xs font-semibold rounded-full shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Quick Details</span>
+              <Eye className="w-3.5 h-3.5 text-[#D96B82]" />
+              <span>Quick View</span>
             </button>
           </div>
 
@@ -197,8 +197,8 @@ export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct })
             Carry a touch of handmade warmth everywhere you go. Hand-stitched with durable, ultra-soft milk cotton yarn.
           </p>
 
-          {/* Section Navigation Tabs */}
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+          {/* Section Navigation Tabs - Horizontally scrollable on mobile */}
+          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap sm:justify-center no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
             {[
               { id: 'all', label: 'All Keychains', icon: '🌸' },
               { id: 'tulip', label: 'Tulip Blooms', icon: '🌷' },
@@ -218,7 +218,7 @@ export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct })
                   onClick={() => {
                     setActiveSection(tab.id as SectionKey);
                   }}
-                  className={`px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-2 cursor-pointer ${
+                  className={`px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-[#D96B82] text-white shadow-md scale-105'
                       : 'bg-white text-[#5C3E45] border border-rose-200/80 hover:bg-rose-50 hover:text-[#C0536A]'

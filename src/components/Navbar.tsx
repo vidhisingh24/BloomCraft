@@ -31,27 +31,27 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#FFFDFB]/85 backdrop-blur-md border-b border-[#F4A6B7]/30 transition-all">
       {/* Top Announcement Bar */}
-      <div className="bg-gradient-to-r from-[#FFE3E8] via-[#FFF0F3] to-[#FFE3E8] py-1.5 px-4 text-center text-xs text-[#7A5B62] font-medium border-b border-[#F4A6B7]/20 flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-[#D96B82]" />
-        <span>Handcrafted with 100% Love & Milk Cotton Yarn • Direct WhatsApp Ordering Available</span>
-        <Sparkles className="w-3.5 h-3.5 text-[#D96B82]" />
+      <div className="bg-gradient-to-r from-[#FFE3E8] via-[#FFF0F3] to-[#FFE3E8] py-1 sm:py-1.5 px-3 sm:px-4 text-center text-[10px] sm:text-xs text-[#7A5B62] font-medium border-b border-[#F4A6B7]/20 flex items-center justify-center gap-1.5 sm:gap-2">
+        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D96B82] shrink-0" />
+        <span className="truncate sm:whitespace-normal">Handcrafted with 100% Love & Milk Cotton Yarn • Direct WhatsApp Ordering</span>
+        <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#D96B82] shrink-0 hidden sm:inline" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo & Brand Name */}
           <button
             onClick={() => handleNavClick('home')}
-            className="flex items-center gap-2.5 text-left group"
+            className="flex items-center gap-2 sm:gap-2.5 text-left group"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/40 flex items-center justify-center text-[#D96B82] shadow-sm group-hover:rotate-12 transition-transform duration-300">
-              <span className="text-lg">🌸</span>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/40 flex items-center justify-center text-[#D96B82] shadow-sm group-hover:rotate-12 transition-transform duration-300 shrink-0">
+              <span className="text-base sm:text-lg">🌸</span>
             </div>
             <div>
-              <span className="font-serif text-2xl md:text-3xl font-bold tracking-wider text-[#3D272A] block leading-none">
+              <span className="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-wider text-[#3D272A] block leading-none">
                 BLOOMCRAFT
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[#A4838B] font-medium block mt-0.5">
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#A4838B] font-medium block mt-0.5">
                 Handmade Crochet Studio
               </span>
             </div>

@@ -17,17 +17,17 @@ export const WishlistDrawer: React.FC = () => {
         className="absolute inset-0 bg-[#3D272A]/40 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
         <div className="w-screen max-w-md bg-[#FFFDFB] shadow-2xl border-l border-[#F4A6B7]/30 flex flex-col">
           
           {/* Header */}
-          <div className="p-6 bg-gradient-to-r from-[#FFE3E8]/60 to-[#FFF0F3] border-b border-rose-100 flex items-center justify-between">
+          <div className="p-4 sm:p-6 bg-gradient-to-r from-[#FFE3E8]/60 to-[#FFF0F3] border-b border-rose-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-[#D96B82]">
                 <Heart className="w-4 h-4 fill-[#D96B82]" />
               </div>
               <div>
-                <h2 className="font-serif text-xl font-bold text-[#3D272A]">Saved Favorites</h2>
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#3D272A]">Saved Favorites</h2>
                 <p className="text-xs text-[#7A5B62]">
                   {wishlistProducts.length} {wishlistProducts.length === 1 ? 'item' : 'items'} saved
                 </p>
@@ -36,7 +36,7 @@ export const WishlistDrawer: React.FC = () => {
 
             <button
               onClick={() => setIsWishlistOpen(false)}
-              className="p-2 rounded-full text-[#5C3E45] hover:bg-white/80 transition-colors"
+              className="p-2 rounded-full text-[#5C3E45] hover:bg-white/80 transition-colors cursor-pointer"
               aria-label="Close wishlist"
             >
               <X className="w-5 h-5" />
@@ -44,7 +44,7 @@ export const WishlistDrawer: React.FC = () => {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {wishlistProducts.length === 0 ? (
               <div className="py-16 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-[#FFE3E8] flex items-center justify-center mx-auto text-2xl">

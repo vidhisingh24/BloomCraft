@@ -52,13 +52,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
       <div
-        className="w-full max-w-lg bg-[#FFFDFB] rounded-3xl border border-[#F4A6B7]/40 shadow-2xl overflow-hidden"
+        className="w-full max-w-lg bg-[#FFFDFB] rounded-3xl border border-[#F4A6B7]/40 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F4A6B7]/20 bg-[#FFF0F3]/60">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-[#F4A6B7]/20 bg-[#FFF0F3]/60 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#FFE3E8] text-[#D96B82] flex items-center justify-center text-sm font-semibold">
               🌸
@@ -77,7 +77,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
           {/* Product Name */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[#7A5B62] mb-1.5">

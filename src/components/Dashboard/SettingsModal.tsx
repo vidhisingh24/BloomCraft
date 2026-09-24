@@ -25,13 +25,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
       <div
-        className="w-full max-w-lg bg-[#FFFDFB] rounded-3xl border border-[#F4A6B7]/40 shadow-2xl overflow-hidden"
+        className="w-full max-w-lg bg-[#FFFDFB] rounded-3xl border border-[#F4A6B7]/40 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F4A6B7]/20 bg-[#FFF0F3]/60">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-[#F4A6B7]/20 bg-[#FFF0F3]/60 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#FFE3E8] text-[#D96B82] flex items-center justify-center text-sm font-semibold">
               ⚙️
@@ -43,14 +43,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors"
+            className="p-1.5 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSave} className="p-6 space-y-5">
+        <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-5 overflow-y-auto">
           {/* Order Acceptance Status */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#FFF0F3]/70 border border-[#F4A6B7]/30">
             <div className="flex items-center gap-3">

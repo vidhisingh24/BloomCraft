@@ -40,30 +40,31 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D272A]/50 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-rose-100 overflow-hidden max-h-[92vh] flex flex-col md:flex-row">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#3D272A]/50 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-100 overflow-hidden max-h-[90vh] sm:max-h-[92vh] flex flex-col md:flex-row">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-[#5C3E45] flex items-center justify-center shadow-md transition-all"
+          className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-30 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#5C3E45] flex items-center justify-center shadow-md transition-all cursor-pointer"
+          aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Product Image Showcase */}
-        <div className="md:w-1/2 relative bg-[#FFF0F3] min-h-[260px] md:min-h-[400px]">
+        <div className="md:w-1/2 relative bg-[#FFF0F3] h-56 sm:h-72 md:h-auto md:min-h-[400px] shrink-0">
           <img
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover"
           />
           {product.tags && product.tags.length > 0 && (
-            <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
+            <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 flex flex-wrap gap-1.5 z-10">
               {product.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-full text-[11px] font-bold text-[#C0536A] shadow-sm"
+                  className="px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-full text-[10px] sm:text-[11px] font-bold text-[#C0536A] shadow-sm"
                 >
                   {tag}
                 </span>
@@ -73,7 +74,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) 
         </div>
 
         {/* Product Details Section */}
-        <div className="md:w-1/2 p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
+        <div className="md:w-1/2 p-5 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
           <div>
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs uppercase tracking-widest text-[#C0536A] font-semibold">

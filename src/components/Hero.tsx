@@ -25,21 +25,21 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
             </div>
 
             {/* Main Heading */}
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#3D272A] leading-[1.15]">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#3D272A] leading-[1.15]">
               Little Things, <br className="hidden sm:inline" />
               <span className="text-[#C0536A] italic font-serif font-normal">Handcrafted</span> With Love.
             </h1>
 
             {/* Subtext */}
-            <p className="text-base sm:text-lg lg:text-xl text-[#7A5B62] font-normal max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-[#7A5B62] font-normal max-w-xl mx-auto lg:mx-0 leading-relaxed">
               “Beautiful crochet creations made specially for your special moments.”
             </p>
 
             {/* Call to Actions */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
               <button
                 onClick={onShopNow}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-[#D96B82] to-[#C0536A] hover:from-[#c95d73] hover:to-[#ae465c] text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-[#D96B82] to-[#C0536A] hover:from-[#c95d73] hover:to-[#ae465c] text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Shop Now</span>
                 <ArrowRight className="w-4 h-4" />
@@ -47,7 +47,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
 
               <button
                 onClick={onCustomize}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/90 hover:bg-white text-[#5C3E45] hover:text-[#C0536A] border border-[#F4A6B7]/60 font-semibold text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/90 hover:bg-white text-[#5C3E45] hover:text-[#C0536A] border border-[#F4A6B7]/60 font-semibold text-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Customize Yours</span>
                 <Sparkles className="w-4 h-4 text-[#D96B82]" />
@@ -55,16 +55,16 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-6 border-t border-rose-100/80 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-[#7A5B62]">
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-[#D96B82] fill-[#D96B82]/20" />
+            <div className="pt-5 border-t border-rose-100/80 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs text-[#7A5B62]">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Heart className="w-3.5 h-3.5 text-[#D96B82] fill-[#D96B82]/20" />
                 <span>Made With Pure Milk Cotton</span>
               </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#D96B82]" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#D96B82]" />
                 <span>Flowers That Never Wilt</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <span className="text-sm">🎁</span>
                 <span>Cute Gift Packaging</span>
               </div>
@@ -72,7 +72,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
           </div>
 
           {/* Right Hero Visual Showcase */}
-          <div className="lg:col-span-5 relative flex justify-center">
+          <div className="lg:col-span-5 relative flex justify-center w-full px-2 sm:px-0">
             {/* Visual Frame Container */}
             <div className="relative w-full max-w-md">
               {/* Main Crochet Showcase Image */}
@@ -80,43 +80,43 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
                 <img
                   src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80"
                   alt="BloomCraft Handcrafted Crochet Tulips & Flowers"
-                  className="w-full h-80 sm:h-96 object-cover hover:scale-105 transition-transform duration-700"
+                  className="w-full h-72 sm:h-96 object-cover hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
                 
                 {/* Romantic Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#3D272A]/70 via-transparent to-transparent flex flex-col justify-end p-6 text-white">
-                  <span className="text-xs font-medium uppercase tracking-widest text-[#FFE3E8]">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#3D272A]/75 via-transparent to-transparent flex flex-col justify-end p-5 sm:p-6 text-white">
+                  <span className="text-[10px] sm:text-xs font-medium uppercase tracking-widest text-[#FFE3E8]">
                     Featured Collection
                   </span>
-                  <p className="font-serif text-xl font-semibold mt-0.5">
+                  <p className="font-serif text-lg sm:text-xl font-semibold mt-0.5">
                     Everlasting Pastel Floral Arrangements
                   </p>
-                  <p className="text-xs text-rose-100/90 mt-1">
+                  <p className="text-[11px] sm:text-xs text-rose-100/90 mt-1">
                     Handmade petal by petal with ultra-soft yarn
                   </p>
                 </div>
               </div>
 
               {/* Floating Badge 1 - Top Left */}
-              <div className="absolute -top-4 -left-4 z-20 bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-rose-100/80 flex items-center gap-3 animate-float-slow">
-                <div className="w-10 h-10 rounded-xl bg-[#FFF0F3] flex items-center justify-center text-lg">
+              <div className="absolute -top-3 left-1 sm:-top-4 sm:-left-4 z-20 bg-white/95 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl shadow-lg border border-rose-100/80 flex items-center gap-2.5 sm:gap-3 animate-float-slow scale-90 sm:scale-100 origin-top-left">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FFF0F3] flex items-center justify-center text-base sm:text-lg">
                   🍓
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#3D272A]">Strawberry Charm</p>
-                  <p className="text-[11px] font-semibold text-[#D96B82]">₹249</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-[#3D272A]">Strawberry Charm</p>
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-[#D96B82]">₹249</p>
                 </div>
               </div>
 
               {/* Floating Badge 2 - Bottom Right */}
-              <div className="absolute -bottom-5 -right-4 z-20 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl shadow-lg border border-rose-100/80 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#FFE3E8] flex items-center justify-center text-[#D96B82] font-serif font-bold text-sm">
+              <div className="absolute -bottom-3 right-1 sm:-bottom-5 sm:-right-4 z-20 bg-white/95 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl shadow-lg border border-rose-100/80 flex items-center gap-2.5 sm:gap-3 scale-90 sm:scale-100 origin-bottom-right">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FFE3E8] flex items-center justify-center text-[#D96B82] font-serif font-bold text-xs sm:text-sm">
                   100%
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-bold text-[#3D272A]">Handmade To Order</p>
-                  <p className="text-[11px] text-[#7A5B62]">Zero Plastic Petals</p>
+                  <p className="text-[11px] sm:text-xs font-bold text-[#3D272A]">Handmade To Order</p>
+                  <p className="text-[10px] sm:text-[11px] text-[#7A5B62]">Zero Plastic Petals</p>
                 </div>
               </div>
 

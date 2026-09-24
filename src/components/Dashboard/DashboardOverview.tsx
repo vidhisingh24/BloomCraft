@@ -218,8 +218,46 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </button>
         </div>
 
-        {/* Table List */}
-        <div className="overflow-x-auto">
+        {/* Mobile View: Cards */}
+        <div className="block md:hidden divide-y divide-rose-100/70 p-4 space-y-3">
+          {recentOrders.map((order) => (
+            <div key={`overview-m-${order.id}`} className="pt-3 first:pt-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-bold text-xs text-[#C0536A]">{order.id}</span>
+                <span
+                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusBadge(
+                    order.status
+                  )}`}
+                >
+                  {order.status}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-semibold text-[#3D272A]">{order.customerName}</p>
+                  <p className="text-[10px] text-[#A4838B]">{order.phone}</p>
+                </div>
+                <p className="font-bold text-[#C0536A]">₹{order.total}</p>
+              </div>
+
+              <div className="flex items-center gap-2 bg-[#FFFDFB] p-2 rounded-xl border border-rose-100">
+                <img
+                  src={order.items[0]?.image}
+                  alt="item"
+                  className="w-7 h-7 rounded-lg object-cover border border-rose-200 bg-[#FFF0F3] shrink-0"
+                />
+                <p className="font-medium text-[11px] text-[#3D272A] truncate">
+                  {order.items[0]?.name}
+                  {order.items.length > 1 && ` (+${order.items.length - 1} more)`}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FAF8F5] text-[#7A5B62] uppercase tracking-wider font-semibold border-b border-[#F4A6B7]/20">
               <tr>

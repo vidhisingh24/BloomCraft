@@ -54,7 +54,7 @@ export const LogoReveal: React.FC<LogoRevealProps> = ({ isVisible }) => {
 
       {/* Brand Title: BLOOMCRAFT with Explosive Boom Animation */}
       <div className="relative animate-title-boom">
-        <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl font-black tracking-[0.16em] text-transparent bg-clip-text bg-gradient-to-b from-[#3D272A] via-[#592F38] to-[#3D272A] leading-tight select-none filter drop-shadow-[0_4px_12px_rgba(217,107,130,0.25)]">
+        <h1 className="font-serif text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-[0.10em] sm:tracking-[0.16em] text-transparent bg-clip-text bg-gradient-to-b from-[#3D272A] via-[#592F38] to-[#3D272A] leading-tight select-none filter drop-shadow-[0_4px_12px_rgba(217,107,130,0.25)]">
           BLOOMCRAFT
         </h1>
         {/* Soft Ambient Text Glow */}
@@ -63,7 +63,7 @@ export const LogoReveal: React.FC<LogoRevealProps> = ({ isVisible }) => {
 
       {/* Brand Tagline */}
       <p
-        className="mt-4 sm:mt-5 text-lg sm:text-2xl text-[#7A5B62] font-normal tracking-wide font-sans italic animate-fade-in"
+        className="mt-3 sm:mt-5 text-sm sm:text-xl md:text-2xl text-[#7A5B62] font-normal tracking-wide font-sans italic animate-fade-in"
         style={{ animationDelay: '0.5s' }}
       >
         Handcrafted with love, made to bloom.
