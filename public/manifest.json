@@ -1,0 +1,18 @@
+{
+  "name": "BloomCraft — Handmade Crochet Studio",
+  "short_name": "BloomCraft",
+  "description": "Handcrafted crochet keychains, everlasting flower bouquets, and personalized gifts in Vadodara.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFDFB",
+  "theme_color": "#FFE3E8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,72 +1,129 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Home, 
   ShoppingBag, 
   MessageSquareHeart, 
   Package, 
   Truck, 
-  Settings, 
   ArrowLeft, 
   Menu, 
   X, 
-  Plus
+  RefreshCw
 } from 'lucide-react';
-import { 
-  INITIAL_ORDERS, 
-  INITIAL_CUSTOM_REQUESTS, 
-  INITIAL_PRODUCTS, 
-  type DashboardOrder, 
-  type DashboardCustomRequest, 
-  type DashboardProduct, 
-  type OrderStatus, 
-  type CustomRequestStatus 
-} from '../../data/dashboardData';
+import type { Order, CustomRequest, Product, OrderStatus } from '../../types';
+import { orderService } from '../../services/orderService';
+import { customRequestService } from '../../services/customRequestService';
+import { productService } from '../../services/productService';
+import { useToast } from '../../context/ToastContext';
+
 import { DashboardOverview } from './DashboardOverview';
 import { OrdersManager } from './OrdersManager';
 import { CustomRequestsView } from './CustomRequestsView';
 import { ProductsManager } from './ProductsManager';
 import { DeliveryManager } from './DeliveryManager';
-import { AddProductModal } from './AddProductModal';
-import { SettingsModal } from './SettingsModal';
 
 interface DashboardLayoutProps {
   onExitDashboard: () => void;
 }
 
-type TabType = 'overview' | 'orders' | 'custom' | 'products' | 'delivery';
+export type TabType = 'overview' | 'orders' | 'custom' | 'products' | 'delivery';
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboard }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Core state for live maker interaction
-  const [orders, setOrders] = useState<DashboardOrder[]>(INITIAL_ORDERS);
-  const [customRequests, setCustomRequests] = useState<DashboardCustomRequest[]>(INITIAL_CUSTOM_REQUESTS);
-  const [products, setProducts] = useState<DashboardProduct[]>(INITIAL_PRODUCTS);
+  // Live Service State
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-    );
+  const { showToast } = useToast();
+
+  const loadDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [fetchedOrders, fetchedRequests, fetchedProducts] = await Promise.all([
+        orderService.getAll(),
+        customRequestService.getAll(),
+        productService.getAll(),
+      ]);
+      setOrders(fetchedOrders);
+      setCustomRequests(fetchedRequests);
+      setProducts(fetchedProducts);
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus, note?: string) => {
+    try {
+      const updated = await orderService.updateStatus(orderId, newStatus, note);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      showToast('Order Status Updated 🌸', `Order #${orderId} set to "${newStatus}"`, 'cart');
+    } catch (err: any) {
+      showToast('Error Updating Status', err.message, 'info');
+    }
   };
 
-  const handleUpdateCustomStatus = (requestId: string, newStatus: CustomRequestStatus) => {
-    setCustomRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: newStatus } : r))
-    );
+  const handleUpdatePaymentStatus = async (orderId: string, status: any) => {
+    try {
+      const updated = await orderService.updatePaymentStatus(orderId, status);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      showToast('Payment Verified', `Order #${orderId} marked as ${status}`, 'cart');
+    } catch (err: any) {
+      showToast('Error', err.message, 'info');
+    }
   };
 
-  const handleToggleProductStock = (productId: string) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, inStock: !p.inStock } : p))
-    );
+  const handleUpdateCustomStatus = async (requestId: string, newStatus: CustomRequest['status']) => {
+    try {
+      const updated = await customRequestService.updateStatus(requestId, newStatus);
+      setCustomRequests((prev) => prev.map((r) => (r.id === requestId ? updated : r)));
+      showToast('Request Status Updated', `Request #${requestId} set to "${newStatus}"`, 'cart');
+    } catch (err: any) {
+      showToast('Error', err.message, 'info');
+    }
   };
 
-  const handleAddProduct = (newProduct: DashboardProduct) => {
-    setProducts((prev) => [newProduct, ...prev]);
+  const handleUpdateCustomQuote = async (requestId: string, quotedPrice: number, notes?: string) => {
+    try {
+      const updated = await customRequestService.updateQuote(requestId, quotedPrice, notes);
+      setCustomRequests((prev) => prev.map((r) => (r.id === requestId ? updated : r)));
+      showToast('Quote Sent! 🌸', `Quoted ₹${quotedPrice} for #${requestId}`, 'cart');
+    } catch (err: any) {
+      showToast('Error', err.message, 'info');
+    }
   };
+
+  const handleToggleProductAvailability = async (productId: string, newAvail: Product['availability']) => {
+    try {
+      const updated = await productService.updateAvailability(productId, newAvail);
+      setProducts((prev) => prev.map((p) => (p.id === productId ? updated : p)));
+      showToast('Product Availability Updated', `${updated.name} set to "${newAvail}"`, 'cart');
+    } catch (err: any) {
+      showToast('Error', err.message, 'info');
+    }
+  };
+
+  const handleUpdateProductPrice = async (productId: string, pricePaise: number) => {
+    try {
+      const updated = await productService.updatePrice(productId, pricePaise);
+      setProducts((prev) => prev.map((p) => (p.id === productId ? updated : p)));
+      showToast('Price Updated', `${updated.name} updated to ₹${pricePaise / 100}`, 'cart');
+    } catch (err: any) {
+      showToast('Error', err.message, 'info');
+    }
+  };
+
+  const pendingOrdersCount = orders.filter((o) => o.status === 'placed' || o.status === 'confirmed').length;
+  const newRequestsCount = customRequests.filter((c) => c.status === 'received').length;
 
   const navItems: { id: TabType; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'overview', label: 'Overview', icon: <Home className="w-4 h-4" /> },
@@ -74,13 +131,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
       id: 'orders', 
       label: 'Orders', 
       icon: <ShoppingBag className="w-4 h-4" />,
-      badge: orders.filter((o) => o.status === 'New').length || undefined
+      badge: pendingOrdersCount || undefined
     },
     { 
       id: 'custom', 
       label: 'Custom Requests', 
       icon: <MessageSquareHeart className="w-4 h-4" />,
-      badge: customRequests.filter((c) => c.status === 'New Request').length || undefined
+      badge: newRequestsCount || undefined
     },
     { id: 'products', label: 'Products', icon: <Package className="w-4 h-4" /> },
     { id: 'delivery', label: 'Delivery Hub', icon: <Truck className="w-4 h-4" /> },
@@ -98,84 +155,66 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
             <span className="font-serif text-lg font-bold text-[#3D272A] leading-tight block">
               BLOOMCRAFT
             </span>
-            <span className="text-[10px] text-[#A4838B] font-semibold uppercase tracking-wider block">
-              Maker Studio
+            <span className="text-[10px] text-[#C0536A] font-semibold tracking-wider uppercase">
+              Maker Studio Hub
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddProductOpen(true)}
-            className="p-2 rounded-full bg-[#D96B82] text-white"
-            title="Add Product"
+            onClick={onExitDashboard}
+            className="p-1.5 rounded-lg text-xs font-semibold text-[#7A5B62] bg-[#FAF8F5] border border-[#EBD8DC] flex items-center gap-1"
           >
-            <Plus className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" /> Shop
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-full bg-[#FFE3E8] text-[#C0536A]"
-            aria-label="Toggle Menu"
+            className="p-2 rounded-xl text-[#3D272A] hover:bg-[#FFE3E8]/40"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Backdrop Overlay */}
-      {mobileMenuOpen && (
-        <div
-          onClick={() => setMobileMenuOpen(false)}
-          className="md:hidden fixed inset-0 z-35 bg-black/40 backdrop-blur-xs transition-opacity"
-        />
-      )}
-
-      {/* Sidebar for Desktop & Mobile Overlay */}
-      <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-64 bg-[#FFFDFB] border-r border-[#F4A6B7]/30 flex flex-col justify-between p-5 transition-transform duration-300 md:translate-x-0 ${
-          mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-        }`}
-      >
-        <div>
-          {/* Brand Logo & Studio Title */}
-          <div className="flex items-center gap-2.5 pb-6 border-b border-[#F4A6B7]/20">
-            <div className="w-10 h-10 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/40 flex items-center justify-center text-[#D96B82] shadow-sm">
-              <span className="text-xl">🌸</span>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 bg-[#FFFDFB] border-r border-[#F4A6B7]/30 p-5 shrink-0 justify-between min-h-screen sticky top-0">
+        <div className="space-y-6">
+          {/* Brand Logo */}
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FFE3E8] to-[#FFF0F3] border border-[#F4A6B7]/40 flex items-center justify-center text-xl shadow-xs">
+              🌸
             </div>
             <div>
-              <span className="font-serif text-xl font-bold tracking-wider text-[#3D272A] block leading-none">
+              <h2 className="font-serif text-xl font-bold tracking-tight text-[#3D272A]">
                 BLOOMCRAFT
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-[#C0536A] font-bold block mt-1">
+              </h2>
+              <span className="text-[10px] font-bold text-[#D96B82] uppercase tracking-widest block">
                 Maker Studio
               </span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="mt-6 space-y-1.5">
+          <nav className="space-y-1.5 pt-2">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-[#FFE3E8] text-[#C0536A] shadow-sm font-bold'
-                      : 'text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFF0F3]'
+                      ? 'bg-[#FFE3E8] text-[#C0536A] shadow-xs'
+                      : 'text-[#7A5B62] hover:bg-[#FFF0F3] hover:text-[#3D272A]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     {item.icon}
                     <span>{item.label}</span>
                   </div>
-
-                  {item.badge && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#D96B82] text-white text-[10px] font-bold">
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#D96B82] text-white">
                       {item.badge}
                     </span>
                   )}
@@ -185,36 +224,35 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
           </nav>
         </div>
 
-        {/* Sidebar Footer Actions */}
-        <div className="pt-6 border-t border-[#F4A6B7]/20 space-y-2">
-          {/* Settings Button */}
+        {/* Footer Actions */}
+        <div className="space-y-3 pt-6 border-t border-[#F4A6B7]/20">
           <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-[#7A5B62] hover:text-[#3D272A] hover:bg-[#FFF0F3] transition-colors cursor-pointer"
+            onClick={loadDashboardData}
+            className="w-full py-2 px-3 rounded-xl border border-[#EBD8DC] text-xs font-semibold text-[#7A5B62] hover:bg-[#FFF0F3] transition-all flex items-center justify-center gap-2"
           >
-            <Settings className="w-4 h-4" />
-            <span>Studio Settings</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Sync Live Data</span>
           </button>
 
-          {/* View Website Button (Return to customer store) */}
           <button
             onClick={onExitDashboard}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-[#D96B82] hover:bg-[#C0536A] shadow-sm transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-full bg-[#3D272A] text-white text-xs font-bold hover:bg-[#2A1A1C] shadow-sm transition-all flex items-center justify-center gap-2"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>View Website</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-[#FFE3E8]" />
+            <span>Back to Storefront</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen p-4 sm:p-6 lg:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
         {activeTab === 'overview' && (
           <DashboardOverview
             orders={orders}
             customRequests={customRequests}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-            onOpenAddProduct={() => setIsAddProductOpen(true)}
+            products={products}
+            onNavigateTab={(tab) => setActiveTab(tab as TabType)}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
           />
         )}
 
@@ -222,42 +260,65 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
           <OrdersManager
             orders={orders}
             onUpdateOrderStatus={handleUpdateOrderStatus}
+            onUpdatePaymentStatus={handleUpdatePaymentStatus}
           />
         )}
 
         {activeTab === 'custom' && (
           <CustomRequestsView
             customRequests={customRequests}
-            onUpdateStatus={handleUpdateCustomStatus}
+            onUpdateCustomStatus={handleUpdateCustomStatus}
+            onUpdateQuote={handleUpdateCustomQuote}
           />
         )}
 
         {activeTab === 'products' && (
           <ProductsManager
             products={products}
-            onToggleStock={handleToggleProductStock}
-            onOpenAddProduct={() => setIsAddProductOpen(true)}
+            onToggleProductStock={(id) => {
+              const p = products.find((pr) => pr.id === id);
+              if (p) {
+                const nextAvail = p.availability === 'out_of_stock' ? 'in_stock' : 'out_of_stock';
+                handleToggleProductAvailability(id, nextAvail);
+              }
+            }}
+            onUpdatePrice={handleUpdateProductPrice}
           />
         )}
 
         {activeTab === 'delivery' && (
-          <DeliveryManager orders={orders} />
+          <DeliveryManager
+            orders={orders}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
+          />
         )}
       </main>
 
-      {/* Modals */}
-      <AddProductModal
-        isOpen={isAddProductOpen}
-        onClose={() => setIsAddProductOpen(false)}
-        onAddProduct={handleAddProduct}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#F0E6E8] px-2 py-2 flex items-center justify-around z-40 shadow-lg">
+        {navItems.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition-all relative ${
+                isActive ? 'text-[#D96B82] font-bold' : 'text-[#7A5B62]'
+              }`}
+            >
+              <div className="relative">
+                {item.icon}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#D96B82] text-white text-[9px] font-bold flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px]">{item.label.split(' ')[0]}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
-
-export default DashboardLayout;

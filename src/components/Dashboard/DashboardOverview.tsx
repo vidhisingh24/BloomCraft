@@ -4,325 +4,199 @@ import {
   Clock, 
   CheckCircle2, 
   MessageSquareHeart, 
-  Plus, 
   ArrowRight
 } from 'lucide-react';
-import type { DashboardOrder, DashboardCustomRequest } from '../../data/dashboardData';
+import type { Order, CustomRequest, OrderStatus } from '../../types';
+import { formatPaise } from '../../utils/currency';
 
 interface DashboardOverviewProps {
-  orders: DashboardOrder[];
-  customRequests: DashboardCustomRequest[];
+  orders: Order[];
+  customRequests: CustomRequest[];
+  products?: any[];
   onNavigateTab: (tab: 'overview' | 'orders' | 'custom' | 'products' | 'delivery') => void;
-  onOpenAddProduct: () => void;
+  onUpdateOrderStatus?: (orderId: string, newStatus: OrderStatus) => void;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   orders,
   customRequests,
   onNavigateTab,
-  onOpenAddProduct,
 }) => {
-  const newOrdersCount = orders.filter((o) => o.status === 'New').length;
-  const pendingOrdersCount = orders.filter((o) => o.status === 'Preparing').length;
-  const readyOrdersCount = orders.filter((o) => o.status === 'Ready').length;
-  const newCustomCount = customRequests.filter((c) => c.status === 'New Request' || c.status === 'Reviewing').length;
+  const newOrdersCount = orders.filter((o) => o.status === 'placed').length;
+  const pendingOrdersCount = orders.filter((o) => o.status === 'confirmed' || o.status === 'preparing').length;
+  const readyOrdersCount = orders.filter((o) => o.status === 'ready' || o.status === 'shipped').length;
+  const customRequestsCount = customRequests.filter((c) => c.status === 'received' || c.status === 'quoted').length;
 
-  const recentOrders = orders.slice(0, 4);
+  const recentOrders = orders.slice(0, 5);
 
-  const getStatusBadge = (status: DashboardOrder['status']) => {
+  const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case 'New':
-        return 'bg-amber-100/80 text-amber-800 border-amber-300/60';
-      case 'Preparing':
-        return 'bg-rose-100 text-[#C0536A] border-rose-200';
-      case 'Ready':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300/60';
-      case 'Delivered':
-        return 'bg-stone-100 text-stone-600 border-stone-200';
-    }
-  };
-
-  const getDeliveryIcon = (method: DashboardOrder['deliveryMethod']) => {
-    switch (method) {
-      case 'Vadodara Local':
-        return '📍';
-      case 'College Delivery':
-        return '🏫';
-      case 'Parcel':
-        return '📦';
+      case 'placed':
+        return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'confirmed':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'preparing':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'ready':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+      case 'shipped':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+      case 'delivered':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-300';
     }
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-6xl mx-auto">
-      {/* 1. Welcoming Header */}
+    <div className="space-y-8 max-w-6xl mx-auto">
+      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#F4A6B7]/20">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#3D272A] tracking-tight">
-              Good morning, Bloomcraft 🌸
-            </h1>
-          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#3D272A] tracking-tight">
+            Maker Studio Overview 🌸
+          </h1>
           <p className="text-sm text-[#7A5B62] font-medium">
-            Here's what's happening with your orders today.
+            Live orders, custom requests, and studio workflow
           </p>
         </div>
 
-        {/* Studio Live Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE3E8]/80 border border-[#F4A6B7]/50 text-xs text-[#C0536A] font-medium shadow-sm self-start sm:self-center">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE3E8]/80 border border-[#F4A6B7]/50 text-xs text-[#C0536A] font-medium shadow-xs">
           <span className="w-2 h-2 rounded-full bg-[#D96B82] animate-ping" />
-          <span>Studio Active • Handmade in Vadodara</span>
+          <span>Vadodara Studio Live</span>
         </div>
       </div>
 
-      {/* 2. Compact 4 Summary Cards */}
+      {/* 2. Four KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* New Orders */}
-        <button
+        <div
           onClick={() => onNavigateTab('orders')}
-          className="p-5 rounded-3xl bg-white/95 border border-rose-100 hover:border-[#F4A6B7] shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden"
+          className="bg-white p-5 rounded-3xl border border-[#F0E6E8] shadow-xs hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ShoppingBag className="w-5 h-5" />
+            <span className="text-xs font-bold text-[#7A5B62] uppercase tracking-wider">New Orders</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100/80 text-amber-800">
-              Needs Action
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-3xl font-bold font-serif text-[#3D272A]">{newOrdersCount}</span>
+            <span className="text-xs font-semibold text-[#D96B82] group-hover:underline flex items-center gap-0.5">
+              View <ArrowRight className="w-3 h-3" />
             </span>
           </div>
-          <p className="text-xs uppercase tracking-wider text-[#7A5B62] font-semibold">New Orders</p>
-          <p className="font-serif text-3xl font-bold text-[#3D272A] mt-1">{newOrdersCount}</p>
-          <p className="text-[11px] text-[#A4838B] mt-1 flex items-center gap-1">
-            <span>Awaiting confirmation</span>
-            <ArrowRight className="w-3 h-3 text-[#D96B82] group-hover:translate-x-0.5 transition-transform" />
-          </p>
-        </button>
+        </div>
 
-        {/* Pending Orders */}
-        <button
+        {/* Pending Crafting */}
+        <div
           onClick={() => onNavigateTab('orders')}
-          className="p-5 rounded-3xl bg-white/95 border border-rose-100 hover:border-[#F4A6B7] shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden"
+          className="bg-white p-5 rounded-3xl border border-[#F0E6E8] shadow-xs hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FFE3E8] text-[#D96B82] flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Clock className="w-5 h-5" />
+            <span className="text-xs font-bold text-[#7A5B62] uppercase tracking-wider">In Crafting</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFE3E8] text-[#C0536A]">
-              In Crafting
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-3xl font-bold font-serif text-[#3D272A]">{pendingOrdersCount}</span>
+            <span className="text-xs font-semibold text-[#D96B82] group-hover:underline flex items-center gap-0.5">
+              Manage <ArrowRight className="w-3 h-3" />
             </span>
           </div>
-          <p className="text-xs uppercase tracking-wider text-[#7A5B62] font-semibold">Pending Orders</p>
-          <p className="font-serif text-3xl font-bold text-[#3D272A] mt-1">{pendingOrdersCount}</p>
-          <p className="text-[11px] text-[#A4838B] mt-1 flex items-center gap-1">
-            <span>Currently stitching</span>
-            <ArrowRight className="w-3 h-3 text-[#D96B82] group-hover:translate-x-0.5 transition-transform" />
-          </p>
-        </button>
+        </div>
 
-        {/* Ready for Delivery */}
-        <button
+        {/* Ready / In Transit */}
+        <div
           onClick={() => onNavigateTab('delivery')}
-          className="p-5 rounded-3xl bg-white/95 border border-rose-100 hover:border-[#F4A6B7] shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden"
+          className="bg-white p-5 rounded-3xl border border-[#F0E6E8] shadow-xs hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <CheckCircle2 className="w-5 h-5" />
+            <span className="text-xs font-bold text-[#7A5B62] uppercase tracking-wider">Ready / Shipped</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-              Packed
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-3xl font-bold font-serif text-[#3D272A]">{readyOrdersCount}</span>
+            <span className="text-xs font-semibold text-[#D96B82] group-hover:underline flex items-center gap-0.5">
+              Hub <ArrowRight className="w-3 h-3" />
             </span>
           </div>
-          <p className="text-xs uppercase tracking-wider text-[#7A5B62] font-semibold">Ready for Delivery</p>
-          <p className="font-serif text-3xl font-bold text-[#3D272A] mt-1">{readyOrdersCount}</p>
-          <p className="text-[11px] text-[#A4838B] mt-1 flex items-center gap-1">
-            <span>Local & campus handover</span>
-            <ArrowRight className="w-3 h-3 text-[#D96B82] group-hover:translate-x-0.5 transition-transform" />
-          </p>
-        </button>
+        </div>
 
         {/* Custom Requests */}
-        <button
+        <div
           onClick={() => onNavigateTab('custom')}
-          className="p-5 rounded-3xl bg-white/95 border border-rose-100 hover:border-[#F4A6B7] shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden"
+          className="bg-white p-5 rounded-3xl border border-[#F0E6E8] shadow-xs hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <MessageSquareHeart className="w-5 h-5" />
+            <span className="text-xs font-bold text-[#7A5B62] uppercase tracking-wider">Custom Quotes</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <MessageSquareHeart className="w-4 h-4" />
             </div>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
-              Custom
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-3xl font-bold font-serif text-[#3D272A]">{customRequestsCount}</span>
+            <span className="text-xs font-semibold text-[#D96B82] group-hover:underline flex items-center gap-0.5">
+              Quotes <ArrowRight className="w-3 h-3" />
             </span>
           </div>
-          <p className="text-xs uppercase tracking-wider text-[#7A5B62] font-semibold">Custom Requests</p>
-          <p className="font-serif text-3xl font-bold text-[#3D272A] mt-1">{newCustomCount}</p>
-          <p className="text-[11px] text-[#A4838B] mt-1 flex items-center gap-1">
-            <span>Special yarn inquiries</span>
-            <ArrowRight className="w-3 h-3 text-[#D96B82] group-hover:translate-x-0.5 transition-transform" />
-          </p>
-        </button>
-      </div>
-
-      {/* 3. Quick Actions */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-[#FFFDFB] border border-[#F4A6B7]/30 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFE3E8] text-[#D96B82] flex items-center justify-center text-sm">
-            ✨
-          </div>
-          <div>
-            <h3 className="font-serif text-base font-bold text-[#3D272A]">Maker Quick Actions</h3>
-            <p className="text-xs text-[#7A5B62]">One-click shortcuts to manage today's workflow</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={onOpenAddProduct}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#D96B82] hover:bg-[#C0536A] text-white text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Add Product</span>
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('orders')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FFF0F3] text-[#3D272A] hover:text-[#C0536A] border border-[#F4A6B7]/40 text-xs font-semibold transition-all hover:scale-105 cursor-pointer"
-          >
-            <span>View Orders</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#D96B82]" />
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('custom')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#FFE3E8]/70 hover:bg-[#FFE3E8] text-[#C0536A] border border-[#F4A6B7]/40 text-xs font-semibold transition-all hover:scale-105 cursor-pointer"
-          >
-            <span>View Custom Requests</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 
-      {/* 4. Recent Orders Table */}
-      <div className="bg-white/95 rounded-3xl border border-[#F4A6B7]/30 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F4A6B7]/20 bg-[#FFF0F3]/40">
+      {/* 3. Recent Orders Section */}
+      <div className="bg-white rounded-3xl border border-[#F0E6E8] shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-[#F0E6E8] flex items-center justify-between">
           <div>
-            <h2 className="font-serif text-lg font-bold text-[#3D272A]">Recent Orders</h2>
-            <p className="text-xs text-[#7A5B62]">Latest purchases needing preparation or delivery</p>
+            <h3 className="font-serif font-bold text-lg text-[#3D272A]">Recent Orders</h3>
+            <p className="text-xs text-[#7A5B62]">Latest purchases placed on the BloomCraft demo store</p>
           </div>
-
           <button
             onClick={() => onNavigateTab('orders')}
-            className="flex items-center gap-1.5 text-xs font-semibold text-[#C0536A] hover:text-[#D96B82] transition-colors"
+            className="text-xs font-bold text-[#D96B82] hover:text-[#C0536A] flex items-center gap-1 transition-colors"
           >
-            <span>View All Orders</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            View All ({orders.length}) <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Mobile View: Cards */}
-        <div className="block md:hidden divide-y divide-rose-100/70 p-4 space-y-3">
-          {recentOrders.map((order) => (
-            <div key={`overview-m-${order.id}`} className="pt-3 first:pt-0 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono font-bold text-xs text-[#C0536A]">{order.id}</span>
-                <span
-                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusBadge(
-                    order.status
-                  )}`}
-                >
-                  {order.status}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-semibold text-[#3D272A]">{order.customerName}</p>
-                  <p className="text-[10px] text-[#A4838B]">{order.phone}</p>
-                </div>
-                <p className="font-bold text-[#C0536A]">₹{order.total}</p>
-              </div>
-
-              <div className="flex items-center gap-2 bg-[#FFFDFB] p-2 rounded-xl border border-rose-100">
-                <img
-                  src={order.items[0]?.image}
-                  alt="item"
-                  className="w-7 h-7 rounded-lg object-cover border border-rose-200 bg-[#FFF0F3] shrink-0"
-                />
-                <p className="font-medium text-[11px] text-[#3D272A] truncate">
-                  {order.items[0]?.name}
-                  {order.items.length > 1 && ` (+${order.items.length - 1} more)`}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Desktop View: Table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAF8F5] text-[#7A5B62] uppercase tracking-wider font-semibold border-b border-[#F4A6B7]/20">
-              <tr>
-                <th className="px-6 py-3.5">Order ID</th>
-                <th className="px-6 py-3.5">Customer</th>
-                <th className="px-6 py-3.5">Items</th>
-                <th className="px-6 py-3.5">Amount</th>
-                <th className="px-6 py-3.5">Delivery Method</th>
-                <th className="px-6 py-3.5">Status</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#FFF0F3]/40 border-b border-[#F0E6E8] text-[#7A5B62] font-bold uppercase tracking-wider">
+                <th className="py-3 px-4">Order ID</th>
+                <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-4">Items Summary</th>
+                <th className="py-3 px-4">Total</th>
+                <th className="py-3 px-4">Method</th>
+                <th className="py-3 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-rose-100/60 text-[#3D272A]">
+            <tbody className="divide-y divide-[#F5EDEF]">
               {recentOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-[#FFFDFB] transition-colors">
-                  {/* Order ID */}
-                  <td className="px-6 py-4 font-mono font-bold text-[#C0536A]">
+                <tr key={order.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                  <td className="py-3.5 px-4 font-mono font-bold text-[#3D272A]">
                     {order.id}
                   </td>
-
-                  {/* Customer */}
-                  <td className="px-6 py-4">
-                    <p className="font-semibold text-[#3D272A]">{order.customerName}</p>
-                    <p className="text-[11px] text-[#A4838B]">{order.phone}</p>
+                  <td className="py-3.5 px-4">
+                    <p className="font-semibold text-[#3D272A]">{order.customer.name}</p>
+                    <p className="text-[10px] text-[#7A5B62]">+91 {order.customer.phone}</p>
                   </td>
-
-                  {/* Items */}
-                  <td className="px-6 py-4 max-w-xs">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={order.items[0]?.image}
-                        alt="item"
-                        className="w-8 h-8 rounded-xl object-cover border border-rose-200 bg-[#FFF0F3] flex-shrink-0"
-                      />
-                      <div className="truncate">
-                        <p className="font-medium truncate">{order.items[0]?.name}</p>
-                        {order.items.length > 1 && (
-                          <span className="text-[10px] text-[#C0536A] font-semibold">
-                            +{order.items.length - 1} more item
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                  <td className="py-3.5 px-4 max-w-[200px] truncate text-[#7A5B62]">
+                    {order.items.map((it) => `${it.name || it.product?.name} (${it.quantity})`).join(', ')}
                   </td>
-
-                  {/* Amount */}
-                  <td className="px-6 py-4 font-semibold text-[#3D272A]">
-                    ₹{order.total}
+                  <td className="py-3.5 px-4 font-bold text-[#3D272A]">
+                    {formatPaise(order.pricing.total)}
                   </td>
-
-                  {/* Delivery Method */}
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 text-[#5C3E45] font-medium border border-stone-200/80 text-[11px]">
-                      <span>{getDeliveryIcon(order.deliveryMethod)}</span>
-                      <span>{order.deliveryMethod}</span>
+                  <td className="py-3.5 px-4">
+                    <span className="text-xs font-medium text-[#3D272A]">
+                      {order.delivery.method === 'vadodara_local' ? '📍 Vadodara Local' : order.delivery.method === 'college' ? '🏫 College' : '📦 Parcel'}
                     </span>
                   </td>
-
-                  {/* Status */}
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-[11px] font-semibold border ${getStatusBadge(
-                        order.status
-                      )}`}
-                    >
-                      {order.status}
+                  <td className="py-3.5 px-4">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusBadge(order.status)}`}>
+                      {order.status.toUpperCase()}
                     </span>
                   </td>
                 </tr>

@@ -252,3 +252,35 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Print Stylesheet for Official Receipts */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt !important;
+  }
+
+  header,
+  footer,
+  .no-print,
+  button,
+  .floating-whatsapp {
+    display: none !important;
+  }
+
+  #bloomcraft-receipt {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+  }
+
+  @page {
+    margin: 15mm;
+  }
+}
+

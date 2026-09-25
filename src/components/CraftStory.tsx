@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sparkles, Star } from 'lucide-react';
-import { KEYCHAINS_DATA, BOUQUETS_DATA, type Product } from '../data/products';
+import type { Product } from '../types';
+import { productService } from '../services/productService';
+import { formatPaise } from '../utils/currency';
 import { useCart } from '../context/CartContext';
 
 interface CraftStoryProps {
@@ -10,13 +12,13 @@ interface CraftStoryProps {
 
 export const CraftStory: React.FC<CraftStoryProps> = ({ onSelectProduct, onNavigate }) => {
   const { addToCart } = useCart();
+  const [featuredItems, setFeaturedItems] = useState<Product[]>([]);
 
-  const featuredItems = [
-    KEYCHAINS_DATA[0], // Strawberry
-    BOUQUETS_DATA[0],   // Pastel Tulips
-    KEYCHAINS_DATA[1], // Mini Rose
-    BOUQUETS_DATA[1],   // Crimson Rose Bunch
-  ];
+  useEffect(() => {
+    productService.getAll().then((items) => {
+      setFeaturedItems(items.slice(0, 4));
+    });
+  }, []);
 
   const testimonials = [
     {
@@ -75,13 +77,13 @@ export const CraftStory: React.FC<CraftStoryProps> = ({ onSelectProduct, onNavig
               <div>
                 <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#FFF0F3] mb-3">
                   <img
-                    src={item.image}
+                    src={item.images[0]}
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                     onClick={() => onSelectProduct(item)}
                     loading="lazy"
                   />
-                  {item.tags && (
+                  {item.tags && item.tags.length > 0 && (
                     <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-bold text-[#C0536A]">
                       {item.tags[0]}
                     </span>
@@ -89,7 +91,7 @@ export const CraftStory: React.FC<CraftStoryProps> = ({ onSelectProduct, onNavig
                 </div>
 
                 <div className="text-[10px] font-semibold text-[#A4838B] uppercase tracking-wider">
-                  {item.category === 'keychains' ? 'Keychain' : 'Bouquet'}
+                  {item.category === 'keychain' ? 'Keychain' : item.category === 'bouquet' ? 'Bouquet' : 'Handcrafted Charm'}
                 </div>
                 <h3
                   onClick={() => onSelectProduct(item)}
@@ -100,7 +102,7 @@ export const CraftStory: React.FC<CraftStoryProps> = ({ onSelectProduct, onNavig
               </div>
 
               <div className="mt-4 pt-3 border-t border-rose-100 flex items-center justify-between">
-                <span className="text-base font-bold text-[#C0536A]">₹{item.price}</span>
+                <span className="text-base font-bold text-[#C0536A]">{formatPaise(item.price)}</span>
                 <button
                   onClick={() => addToCart(item, 1)}
                   className="px-3.5 py-1.5 bg-[#FFE3E8] hover:bg-[#D96B82] text-[#C0536A] hover:text-white rounded-full text-xs font-semibold transition-all shadow-sm"

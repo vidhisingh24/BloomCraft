@@ -1,57 +1,81 @@
 import React, { useState } from 'react';
 import { 
   Search, 
-  MessageCircle, 
   Maximize2, 
   X, 
-  ChevronDown,
-  Palette
+  Send
 } from 'lucide-react';
-import type { DashboardCustomRequest, CustomRequestStatus } from '../../data/dashboardData';
+import type { CustomRequest } from '../../types';
+import { formatISTDate } from '../../utils/date';
+import { buildWhatsAppLink } from '../../utils/whatsapp';
 
 interface CustomRequestsViewProps {
-  customRequests: DashboardCustomRequest[];
-  onUpdateStatus: (requestId: string, newStatus: CustomRequestStatus) => void;
+  customRequests: CustomRequest[];
+  onUpdateCustomStatus: (requestId: string, newStatus: CustomRequest['status']) => void;
+  onUpdateQuote: (requestId: string, quotedPrice: number, notes?: string) => void;
 }
+
+type FilterTab = 'all' | CustomRequest['status'];
 
 export const CustomRequestsView: React.FC<CustomRequestsViewProps> = ({
   customRequests,
-  onUpdateStatus,
+  onUpdateCustomStatus,
+  onUpdateQuote,
 }) => {
-  const [activeFilter, setActiveFilter] = useState<string>('All');
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [zoomImage, setZoomImage] = useState<{ url: string; title: string } | null>(null);
+  const [quoteInput, setQuoteInput] = useState<{ [id: string]: number }>({});
 
-  const statusFilters = ['All', 'New Request', 'Reviewing', 'Quote Sent', 'Accepted', 'Completed'];
+  const filterTabs: { key: FilterTab; label: string }[] = [
+    { key: 'all', label: 'All Requests' },
+    { key: 'received', label: 'New Received' },
+    { key: 'quoted', label: 'Quoted' },
+    { key: 'accepted', label: 'Accepted' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'completed', label: 'Completed' },
+  ];
 
   const filteredRequests = customRequests.filter((req) => {
-    const matchesFilter = activeFilter === 'All' || req.status === activeFilter;
+    const matchesFilter = activeFilter === 'all' || req.status === activeFilter;
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      req.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.requestedColors.some((c) => c.toLowerCase().includes(searchQuery.toLowerCase()));
+      !q ||
+      req.id.toLowerCase().includes(q) ||
+      req.customer.name.toLowerCase().includes(q) ||
+      req.customer.phone.includes(q) ||
+      req.description.toLowerCase().includes(q) ||
+      req.colors.some((c) => c.toLowerCase().includes(q));
 
     return matchesFilter && matchesSearch;
   });
 
-  const getStatusBadge = (status: CustomRequestStatus) => {
+  const getStatusBadge = (status: CustomRequest['status']) => {
     switch (status) {
-      case 'New Request':
-        return 'bg-amber-100 text-amber-800 border-amber-300/60';
-      case 'Reviewing':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'Quote Sent':
-        return 'bg-sky-100 text-sky-800 border-sky-200';
-      case 'Accepted':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300/60';
-      case 'Completed':
-        return 'bg-stone-100 text-stone-600 border-stone-200';
+      case 'received':
+        return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'quoted':
+        return 'bg-sky-100 text-sky-800 border-sky-300';
+      case 'accepted':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'in_progress':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'declined':
+        return 'bg-red-100 text-red-800 border-red-300';
     }
   };
 
+  const handleSendQuoteWhatsApp = (req: CustomRequest, price: number) => {
+    onUpdateQuote(req.id, price);
+    const phone = req.customer.phone.replace(/\D/g, '');
+    const text = `🌸 *BLOOMCRAFT CUSTOM QUOTE — ${req.id}* 🌸\n\nHi ${req.customer.name}! We'd love to craft your custom crochet idea:\n\n🧶 *Category:* ${req.itemType || 'Custom Crochet'}\n🎨 *Palette:* ${req.colors.join(', ')}\n🔢 *Quantity:* ${req.quantity}\n\n👉 *Quoted Price:* *₹${price}* (Includes handcrafted gift box 🎀)\n\nPlease let us know if you'd like us to confirm and start crafting your bespoke piece! 💕`;
+    window.open(buildWhatsAppLink(text, phone), '_blank');
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#F4A6B7]/20">
         <div>
@@ -60,7 +84,7 @@ export const CustomRequestsView: React.FC<CustomRequestsViewProps> = ({
               Custom Crochet Requests
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFE3E8] text-[#C0536A] font-semibold">
-              Special Orders
+              Bespoke Studio
             </span>
           </div>
           <p className="text-sm text-[#7A5B62] font-medium">
@@ -68,35 +92,32 @@ export const CustomRequestsView: React.FC<CustomRequestsViewProps> = ({
           </p>
         </div>
 
-        {/* Total count badge */}
-        <div className="text-xs text-[#7A5B62] bg-[#FFF0F3] px-4 py-2 rounded-2xl border border-[#F4A6B7]/30">
-          Showing <span className="font-bold text-[#C0536A]">{filteredRequests.length}</span> custom requests
+        <div className="text-xs text-[#7A5B62] bg-[#FFF0F3] px-3.5 py-2 rounded-xl border border-[#F4A6B7]/30">
+          <span className="font-bold text-[#D96B82]">{filteredRequests.length}</span> requests
         </div>
       </div>
 
       {/* Filters & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Status Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-[#FFF0F3]/70 border border-[#F4A6B7]/30 self-start">
-          {statusFilters.map((tab) => {
-            const count =
-              tab === 'All' ? customRequests.length : customRequests.filter((r) => r.status === tab).length;
-            const isActive = activeFilter === tab;
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#FFF0F3]/70 border border-[#F4A6B7]/30">
+          {filterTabs.map((tab) => {
+            const count = tab.key === 'all' ? customRequests.length : customRequests.filter((r) => r.status === tab.key).length;
+            const isActive = activeFilter === tab.key;
 
             return (
               <button
-                key={tab}
-                onClick={() => setActiveFilter(tab)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                key={tab.key}
+                onClick={() => setActiveFilter(tab.key)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-white text-[#C0536A] shadow-sm border border-[#F4A6B7]/40'
+                    ? 'bg-white text-[#C0536A] shadow-xs border border-[#F4A6B7]/40'
                     : 'text-[#7A5B62] hover:text-[#C0536A] hover:bg-white/50'
                 }`}
               >
-                <span>{tab}</span>
+                <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isActive ? 'bg-[#FFE3E8] text-[#C0536A]' : 'bg-white/80 text-[#7A5B62]'
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-[#FFE3E8] text-[#C0536A]' : 'bg-white text-[#7A5B62]'
                   }`}
                 >
                   {count}
@@ -106,175 +127,128 @@ export const CustomRequestsView: React.FC<CustomRequestsViewProps> = ({
           })}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 text-[#A4838B] absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 text-[#A38B90] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search custom orders..."
+            placeholder="Search request ID, customer..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-2xl bg-white border border-[#F4A6B7]/40 text-xs text-[#3D272A] placeholder-[#A4838B] focus:outline-none focus:ring-2 focus:ring-[#D96B82]/50 shadow-sm"
+            className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#EBD8DC] bg-white focus:outline-none focus:border-[#D96B82]"
           />
         </div>
       </div>
 
-      {/* Custom Requests Grid with Prominent Reference Images */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-        {filteredRequests.length === 0 ? (
-          <div className="col-span-2 text-center py-12 bg-white/80 rounded-3xl border border-rose-100 p-8">
-            <span className="text-3xl">🌸</span>
-            <p className="font-serif font-bold text-sm text-[#3D272A] mt-2">No custom requests found</p>
-            <p className="text-xs text-[#A4838B]">No custom requests matching your filter.</p>
-          </div>
-        ) : (
-          filteredRequests.map((req) => (
+      {/* Request Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {filteredRequests.map((req) => {
+          const currentQuote = quoteInput[req.id] || req.quotedPrice || 0;
+
+          return (
             <div
               key={req.id}
-              className="bg-white/95 rounded-3xl border border-[#F4A6B7]/40 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between"
+              className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F0E6E8] shadow-xs hover:shadow-md transition-all space-y-4 flex flex-col justify-between"
             >
-              <div>
-                {/* Reference Image - Visually Prominent as requested */}
-                <div className="relative group w-full h-56 sm:h-64 bg-[#FFF0F3] overflow-hidden">
-                  <img
-                    src={req.referenceImage}
-                    alt={req.description}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-
-                  {/* Top Badges */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white font-mono text-xs font-bold border border-white/30">
-                      {req.id}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/85 backdrop-blur-md text-[#3D272A] text-[11px] font-semibold border border-white/60">
-                      Qty: {req.quantity}
-                    </span>
+              <div className="space-y-3">
+                {/* Card Top */}
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#F5EDEF]">
+                  <div>
+                    <span className="font-mono font-bold text-sm text-[#3D272A]">{req.id}</span>
+                    <span className="text-[10px] text-[#A38B90] block">{formatISTDate(req.createdAt)}</span>
                   </div>
 
-                  {/* Zoom Lightbox Trigger */}
-                  <button
-                    onClick={() => setZoomImage({ url: req.referenceImage, title: req.description })}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-white/85 hover:bg-white text-[#3D272A] shadow-md transition-transform hover:scale-110 cursor-pointer"
-                    title="Zoom Reference Image"
+                  <select
+                    value={req.status}
+                    onChange={(e) => onUpdateCustomStatus(req.id, e.target.value as CustomRequest['status'])}
+                    className={`text-xs px-2.5 py-1 rounded-xl font-bold border ${getStatusBadge(req.status)} focus:outline-none`}
                   >
-                    <Maximize2 className="w-4 h-4" />
-                  </button>
-
-                  {/* Customer Floating Bar at bottom of image */}
-                  <div className="absolute bottom-3 inset-x-3 flex items-center justify-between text-white">
-                    <div>
-                      <p className="text-sm font-bold drop-shadow-sm">{req.customerName}</p>
-                      <p className="text-[11px] text-rose-100 font-mono drop-shadow-sm">{req.phone}</p>
-                    </div>
-                    {req.budgetQuote && (
-                      <span className="px-3 py-1 rounded-full bg-[#D96B82]/90 backdrop-blur-md text-white text-xs font-bold shadow-md">
-                        {req.budgetQuote}
-                      </span>
-                    )}
-                  </div>
+                    <option value="received">Received</option>
+                    <option value="quoted">Quoted</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed 🌸</option>
+                    <option value="declined">Declined</option>
+                  </select>
                 </div>
 
-                {/* Details Section */}
-                <div className="p-5 space-y-4">
-                  {/* Description */}
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold tracking-wider text-[#A4838B] mb-1">
-                      Customer Idea & Notes
-                    </label>
-                    <p className="text-xs sm:text-sm text-[#3D272A] leading-relaxed">
-                      {req.description}
-                    </p>
-                    {req.customerNotes && (
-                      <p className="text-xs text-[#7A5B62] italic mt-1.5 p-2 rounded-xl bg-[#FFF0F3]/80 border border-rose-100">
-                        "{req.customerNotes}"
-                      </p>
-                    )}
-                  </div>
+                {/* Customer & Info */}
+                <div className="text-xs text-[#7A5B62] space-y-1">
+                  <p className="font-bold text-sm text-[#3D272A]">{req.customer.name}</p>
+                  <p>WhatsApp: +91 {req.customer.phone} {req.customer.email ? `• ${req.customer.email}` : ''}</p>
+                  <p>Category: <span className="font-semibold text-[#3D272A]">{req.itemType || 'Custom Piece'}</span> (Qty: {req.quantity})</p>
+                  {req.neededBy && <p>Needed By: <span className="font-semibold text-[#D96B82]">{req.neededBy}</span></p>}
+                </div>
 
-                  {/* Requested Color Palette */}
+                {/* Description */}
+                <div className="bg-[#FAF8F5] p-3 rounded-2xl border border-[#EBD8DC] text-xs text-[#3D272A]">
+                  <span className="text-[10px] uppercase font-bold text-[#A38B90] block mb-0.5">Idea Description</span>
+                  <p className="italic leading-relaxed">"{req.description}"</p>
+                </div>
+
+                {/* Reference Photos */}
+                {req.referenceImages && req.referenceImages.length > 0 && (
                   <div>
-                    <label className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-[#A4838B] mb-1.5">
-                      <Palette className="w-3 h-3 text-[#D96B82]" />
-                      <span>Requested Yarn Colors</span>
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {req.requestedColors.map((color, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-1 rounded-full bg-[#FAF8F5] text-[#5C3E45] border border-rose-200/70 text-[11px] font-medium"
+                    <span className="text-[10px] uppercase font-bold text-[#A38B90] block mb-1.5">
+                      Customer Reference Photos ({req.referenceImages.length})
+                    </span>
+                    <div className="flex gap-2">
+                      {req.referenceImages.map((img, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setZoomImage({ url: img, title: `${req.customer.name}'s Reference ${i + 1}` })}
+                          className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#EBD8DC] group cursor-pointer"
                         >
-                          🌸 {color}
-                        </span>
+                          <img src={img} alt="Reference" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                            <Maximize2 className="w-4 h-4" />
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Bottom Actions & Status Bar */}
-              <div className="px-5 py-3.5 border-t border-[#F4A6B7]/20 bg-[#FFFDFB] flex items-center justify-between gap-3">
-                {/* Status Dropdown */}
-                <div className="relative">
-                  <select
-                    value={req.status}
-                    onChange={(e) => onUpdateStatus(req.id, e.target.value as CustomRequestStatus)}
-                    className={`appearance-none px-3 py-1.5 pr-7 rounded-full text-xs font-semibold border cursor-pointer focus:outline-none shadow-sm transition-all ${getStatusBadge(
-                      req.status
-                    )}`}
-                  >
-                    <option value="New Request">New Request</option>
-                    <option value="Reviewing">Reviewing</option>
-                    <option value="Quote Sent">Quote Sent</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                  <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
-                </div>
+              {/* Quote & Actions Footer */}
+              <div className="pt-3 border-t border-[#F5EDEF] space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7A5B62]">₹</span>
+                    <input
+                      type="number"
+                      placeholder="Quote price in INR"
+                      value={quoteInput[req.id] !== undefined ? quoteInput[req.id] : req.quotedPrice || ''}
+                      onChange={(e) => setQuoteInput((prev: { [id: string]: number }) => ({ ...prev, [req.id]: Number(e.target.value) }))}
+                      className="w-full pl-7 pr-3 py-2 text-xs rounded-xl border border-[#EBD8DC] bg-[#FAF8F5] focus:outline-none focus:border-[#D96B82]"
+                    />
+                  </div>
 
-                {/* Direct WhatsApp Response Button */}
-                <a
-                  href={`https://wa.me/${req.phone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(
-                    req.customerName
-                  )},%20this%20is%20Bloomcraft%20regarding%20your%20custom%20crochet%20request%20${req.id}🌸`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Chat Quote</span>
-                </a>
+                  <button
+                    onClick={() => handleSendQuoteWhatsApp(req, currentQuote)}
+                    disabled={!currentQuote}
+                    className="px-4 py-2 rounded-xl bg-[#25D366] text-white text-xs font-bold hover:bg-[#20bd5a] transition-all flex items-center gap-1.5 disabled:opacity-40"
+                  >
+                    <Send className="w-3.5 h-3.5" /> Quote on WhatsApp
+                  </button>
+                </div>
               </div>
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
 
-      {/* Lightbox Zoom Modal */}
+      {/* Lightbox Modal */}
       {zoomImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
-          onClick={() => setZoomImage(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full bg-[#1A0C10] rounded-3xl overflow-hidden border border-white/20 shadow-2xl p-2"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
+          <div className="relative max-w-2xl w-full bg-white rounded-3xl p-4 overflow-hidden shadow-2xl">
             <button
               onClick={() => setZoomImage(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 hover:bg-black text-white transition-colors"
+              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white text-[#3D272A] flex items-center justify-center shadow-md hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
             </button>
-            <img
-              src={zoomImage.url}
-              alt={zoomImage.title}
-              className="w-full max-h-[75vh] object-contain rounded-2xl"
-            />
-            <p className="text-xs text-rose-100/90 text-center py-3 px-4">
-              {zoomImage.title}
-            </p>
+            <img src={zoomImage.url} alt={zoomImage.title} className="w-full max-h-[75vh] object-contain rounded-2xl" />
+            <p className="text-center text-xs font-semibold text-[#7A5B62] mt-2">{zoomImage.title}</p>
           </div>
         </div>
       )}

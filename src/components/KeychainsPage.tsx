@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Heart, ShoppingBag, Eye, Sparkles, ArrowRight } from 'lucide-react';
-import { KEYCHAINS_DATA, type Product } from '../data/products';
+import React, { useState, useEffect } from 'react';
+import { Heart, ShoppingBag, Eye, Sparkles, Search } from 'lucide-react';
+import type { Product } from '../types';
+import { productService } from '../services/productService';
+import { formatPaise } from '../utils/currency';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -57,11 +59,29 @@ const SECTIONS: SectionConfig[] = [
 export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct }) => {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const [activeSection, setActiveSection] = useState<SectionKey>('all');
 
-  const getProductsForSection = (sectionId: 'tulip' | 'daisy' | 'rose' | 'others') => {
-    return KEYCHAINS_DATA.filter((item) => item.keychainType === sectionId);
-  };
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState<SectionKey>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'price_asc' | 'price_desc'>('popular');
+  const [inStockOnly, setInStockOnly] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    productService
+      .getAll({
+        category: 'keychain',
+        keychainType: activeSection !== 'all' ? activeSection : undefined,
+        search: searchQuery || undefined,
+        inStockOnly,
+        sortBy,
+      })
+      .then((data) => {
+        setProducts(data);
+        setIsLoading(false);
+      });
+  }, [activeSection, searchQuery, sortBy, inStockOnly]);
 
   const renderProductCard = (product: Product) => {
     const isLiked = isInWishlist(product.id);
@@ -75,105 +95,89 @@ export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct })
           {/* Image Container with Wishlist + Quick View Badge */}
           <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-[#FFF0F3] mb-4">
             <img
-              src={product.image}
+              src={product.images[0]}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
               onClick={() => onSelectProduct(product)}
               loading="lazy"
             />
 
-            {/* Tags */}
+            {/* Badges */}
             {product.tags && product.tags.length > 0 && (
-              <div className="absolute top-3 left-3 flex flex-col gap-1">
-                <span className="px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-full text-[10px] font-bold text-[#C0536A] shadow-sm border border-rose-100">
-                  {product.tags[0]}
-                </span>
+              <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
+                {product.tags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 bg-white/95 backdrop-blur-xs rounded-full text-[10px] font-bold text-[#C0536A] shadow-xs"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
 
             {/* Wishlist Button */}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleWishlist(product);
-              }}
-              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#5C3E45] flex items-center justify-center shadow-md transition-all hover:scale-110 active:scale-90 cursor-pointer"
-              aria-label="Wishlist"
+              onClick={() => toggleWishlist(product)}
+              className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#5C3E45] flex items-center justify-center shadow-md transition-all cursor-pointer"
+              aria-label="Save to Wishlist"
             >
               <Heart
-                className={`w-4 h-4 transition-colors ${
-                  isLiked
-                    ? 'fill-[#D96B82] text-[#D96B82]'
-                    : 'text-[#7A5B62] hover:text-[#D96B82]'
+                className={`w-4 h-4 ${
+                  isLiked ? 'fill-[#D96B82] text-[#D96B82]' : 'text-[#7A5B62]'
                 }`}
               />
             </button>
 
-            {/* Quick View Button - Accessible on touch mobile and desktop hover */}
+            {/* Quick view button on hover */}
             <button
               onClick={() => onSelectProduct(product)}
-              className="absolute bottom-2.5 sm:bottom-3 left-1/2 -translate-x-1/2 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 px-3 py-1 sm:px-3.5 sm:py-1.5 bg-white/95 backdrop-blur-md text-[#3D272A] hover:text-[#C0536A] text-[11px] sm:text-xs font-semibold rounded-full shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              className="absolute bottom-2.5 left-2.5 right-2.5 py-1.5 rounded-xl bg-white/95 backdrop-blur-xs text-[#3D272A] text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300"
             >
               <Eye className="w-3.5 h-3.5 text-[#D96B82]" />
-              <span>Quick View</span>
+              Quick View
             </button>
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-1">
-            <div className="text-[11px] font-medium text-[#A4838B] uppercase tracking-wider">
-              {product.yarnType?.split(' ')[0]} Milk Cotton
-            </div>
+          {/* Product Info */}
+          <div>
+            <span className="text-[10px] font-bold text-[#C0536A] uppercase tracking-wider block">
+              {product.keychainType ? `${product.keychainType} bloom` : 'Crochet Charm'}
+            </span>
             <h3
               onClick={() => onSelectProduct(product)}
-              className="font-serif text-lg sm:text-xl font-bold text-[#3D272A] group-hover:text-[#C0536A] transition-colors cursor-pointer leading-snug"
+              className="font-serif text-sm sm:text-base font-bold text-[#3D272A] line-clamp-1 mt-0.5 hover:text-[#D96B82] cursor-pointer"
             >
               {product.name}
             </h3>
             <p className="text-xs text-[#7A5B62] line-clamp-2 mt-1 leading-relaxed">
               {product.description}
             </p>
-
-            {/* Color Swatch / Options hint */}
-            {product.colors && (
-              <div className="pt-1.5 flex flex-wrap gap-1">
-                {product.colors.slice(0, 2).map((col, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF8F5] text-[#7A5B62] border border-rose-100"
-                  >
-                    🌸 {col}
-                  </span>
-                ))}
-                {product.colors.length > 2 && (
-                  <span className="text-[10px] text-[#A4838B] self-center">
-                    +{product.colors.length - 2} colors
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Price & Add to Cart */}
-        <div className="mt-5 pt-3 border-t border-rose-100/70 flex items-center justify-between gap-3">
+        {/* Footer with Price and Add to Cart */}
+        <div className="pt-4 mt-3 border-t border-[#F5EDEF] flex items-center justify-between">
           <div>
-            <span className="text-lg font-bold text-[#C0536A]">
-              ₹{product.price}
-            </span>
-            {product.originalPrice && (
-              <span className="text-xs line-through text-[#A4838B] ml-1.5">
-                ₹{product.originalPrice}
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-serif text-base sm:text-lg font-bold text-[#3D272A]">
+                {formatPaise(product.price)}
               </span>
-            )}
+              {product.compareAtPrice && product.compareAtPrice > product.price && (
+                <span className="text-xs text-[#A38B90] line-through">
+                  {formatPaise(product.compareAtPrice)}
+                </span>
+              )}
+            </div>
           </div>
 
           <button
             onClick={() => addToCart(product, 1)}
-            className="px-4 py-2 bg-[#FFE3E8] hover:bg-[#D96B82] text-[#C0536A] hover:text-white rounded-full text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer"
+            disabled={product.availability === 'out_of_stock'}
+            className="px-3.5 py-2 rounded-full bg-[#D96B82] text-white text-xs font-semibold hover:bg-[#C0536A] shadow-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Add to Cart</span>
+            <span className="hidden sm:inline">Add</span>
           </button>
         </div>
       </div>
@@ -181,186 +185,123 @@ export const KeychainsPage: React.FC<KeychainsPageProps> = ({ onSelectProduct })
   };
 
   return (
-    <div className="py-10 md:py-16">
+    <div className="py-8 sm:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/40 text-[#C0536A] text-xs font-semibold mb-3 shadow-sm">
-            <span>🧶</span>
-            <span>Pocket-Sized Handmade Cuties</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFE3E8] border border-[#F4A6B7]/40 text-[#C0536A] text-xs font-semibold mb-3 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Handmade in Vadodara • 100% Milk Cotton</span>
           </div>
+
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3D272A] tracking-tight">
-            Handcrafted Crochet Keychains
+            Handcrafted Keychain Blooms 🌸
           </h1>
-          <p className="text-sm sm:text-base text-[#7A5B62] mt-3 leading-relaxed">
-            Carry a touch of handmade warmth everywhere you go. Hand-stitched with durable, ultra-soft milk cotton yarn.
+
+          <p className="text-sm sm:text-base text-[#7A5B62] mt-3 max-w-xl mx-auto leading-relaxed">
+            Pocket-sized everlasting floral charms and adorable amigurumi creations to accompany your keys, bags, and everyday moments.
           </p>
+        </div>
 
-          {/* Section Navigation Tabs - Horizontally scrollable on mobile */}
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap sm:justify-center no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            {[
-              { id: 'all', label: 'All Keychains', icon: '🌸' },
-              { id: 'tulip', label: 'Tulip Blooms', icon: '🌷' },
-              { id: 'daisy', label: 'Daisy Charms', icon: '🌼' },
-              { id: 'rose', label: 'Romantic Roses', icon: '🌹' },
-              { id: 'others', label: 'Fruits & Animals', icon: '✨' },
-            ].map((tab) => {
-              const isActive = activeSection === tab.id;
-              const count =
-                tab.id === 'all'
-                  ? KEYCHAINS_DATA.length
-                  : getProductsForSection(tab.id as any).length;
+        {/* Section Tabs / Flower categories */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-6">
+          <button
+            onClick={() => setActiveSection('all')}
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+              activeSection === 'all'
+                ? 'bg-[#3D272A] text-white shadow-md'
+                : 'bg-white text-[#7A5B62] border border-[#EBD8DC] hover:border-[#D96B82]'
+            }`}
+          >
+            ✨ All Charms
+          </button>
+          {SECTIONS.map((sec) => (
+            <button
+              key={sec.id}
+              onClick={() => setActiveSection(sec.id)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                activeSection === sec.id
+                  ? 'bg-[#D96B82] text-white shadow-md'
+                  : 'bg-white text-[#7A5B62] border border-[#EBD8DC] hover:border-[#D96B82]'
+              }`}
+            >
+              {sec.emoji} {sec.title}
+            </button>
+          ))}
+        </div>
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveSection(tab.id as SectionKey);
-                  }}
-                  className={`px-3.5 sm:px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0 ${
-                    isActive
-                      ? 'bg-[#D96B82] text-white shadow-md scale-105'
-                      : 'bg-white text-[#5C3E45] border border-rose-200/80 hover:bg-rose-50 hover:text-[#C0536A]'
-                  }`}
-                >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      isActive ? 'bg-white/25 text-white' : 'bg-rose-100 text-[#C0536A]'
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+        {/* Search, Filter & Sort Controls */}
+        <div className="bg-white p-4 rounded-2xl border border-[#F0E6E8] shadow-xs mb-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-[#A38B90] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by flower or tag..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#EBD8DC] bg-[#FAF8F5] focus:outline-none focus:border-[#D96B82]"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <label className="flex items-center gap-1.5 text-xs text-[#7A5B62] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={inStockOnly}
+                onChange={(e) => setInStockOnly(e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-[#D96B82]"
+              />
+              <span>In Stock</span>
+            </label>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 text-xs rounded-xl border border-[#EBD8DC] bg-[#FAF8F5] text-[#3D272A] focus:outline-none focus:border-[#D96B82]"
+            >
+              <option value="popular">Popular / Bestsellers</option>
+              <option value="newest">Newest Additions</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
           </div>
         </div>
 
-        {/* Section Render Mode */}
-        {activeSection === 'all' ? (
-          /* ALL SECTIONS IN DISTINCT CURATED BLOCKS */
-          <div className="space-y-16">
-            {SECTIONS.map((section) => {
-              const items = getProductsForSection(section.id);
-              if (items.length === 0) return null;
-
-              return (
-                <div key={section.id} className="space-y-6">
-                  {/* Section Title Bar */}
-                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b border-[#F4A6B7]/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-[#FFE3E8] border border-[#F4A6B7]/50 flex items-center justify-center text-xl shadow-sm">
-                        {section.emoji}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#3D272A]">
-                            {section.title}
-                          </h2>
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFE3E8] text-[#C0536A] font-bold">
-                            {items.length} items
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#7A5B62] mt-0.5">{section.description}</p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setActiveSection(section.id);
-                        window.scrollTo({ top: 150, behavior: 'smooth' });
-                      }}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C0536A] hover:text-[#D96B82] transition-colors cursor-pointer self-start sm:self-auto"
-                    >
-                      <span>Explore {section.title}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Product Grid for this section */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-                    {items.map(renderProductCard)}
-                  </div>
-                </div>
-              );
-            })}
+        {/* Product Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 py-12">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div key={n} className="bg-white rounded-3xl p-4 border border-[#F0E6E8] animate-pulse space-y-3">
+                <div className="aspect-square bg-[#FFE3E8]/40 rounded-2xl" />
+                <div className="h-4 bg-[#FFE3E8]/50 rounded w-3/4" />
+                <div className="h-3 bg-[#FFE3E8]/30 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-3xl border border-[#F0E6E8] p-8">
+            <span className="text-3xl">🌸</span>
+            <h3 className="font-serif font-bold text-lg text-[#3D272A] mt-2">No creations matched your search</h3>
+            <p className="text-xs text-[#7A5B62] mt-1">Try searching for tulips, daisies, sunflowers, or resetting filters.</p>
+            <button
+              onClick={() => {
+                setActiveSection('all');
+                setSearchQuery('');
+                setInStockOnly(false);
+              }}
+              className="mt-4 px-5 py-2 rounded-full bg-[#D96B82] text-white text-xs font-semibold"
+            >
+              Reset Filters
+            </button>
           </div>
         ) : (
-          /* INDIVIDUAL FILTERED SECTION */
-          <div>
-            {(() => {
-              const currentSec = SECTIONS.find((s) => s.id === activeSection);
-              const items = getProductsForSection(activeSection);
-
-              return (
-                <div className="space-y-6">
-                  {/* Filtered Section Header Card */}
-                  {currentSec && (
-                    <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#F4A6B7]/30 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-[#FFE3E8] border border-[#F4A6B7]/50 flex items-center justify-center text-2xl shadow-sm">
-                          {currentSec.emoji}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#3D272A]">
-                              {currentSec.title}
-                            </h2>
-                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FFE3E8] text-[#C0536A] font-bold">
-                              {items.length} creations
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-[#7A5B62] mt-1">{currentSec.description}</p>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setActiveSection('all')}
-                        className="px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 text-[#3D272A] text-xs font-semibold transition-colors cursor-pointer self-start sm:self-auto"
-                      >
-                        ← View All Sections
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-                    {items.map(renderProductCard)}
-                  </div>
-                </div>
-              );
-            })()}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {products.map((p) => renderProductCard(p))}
           </div>
         )}
-
-        {/* Custom Keychain Callout */}
-        <div className="mt-16 p-6 sm:p-10 rounded-3xl bg-white border border-[#F4A6B7]/30 text-center max-w-2xl mx-auto shadow-sm">
-          <div className="w-10 h-10 rounded-full bg-[#FFE3E8] text-[#D96B82] flex items-center justify-center text-lg mx-auto mb-3">
-            ✨
-          </div>
-          <h4 className="font-serif text-xl sm:text-2xl font-bold text-[#3D272A]">
-            Want a keychain in your favourite colors or custom initials?
-          </h4>
-          <p className="text-xs sm:text-sm text-[#7A5B62] mt-2 mb-5 leading-relaxed">
-            We customize character keychains, alphabet name charms, and matching couple bells with 100% milk cotton yarn.
-          </p>
-          <button
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('nav-to', { detail: 'customize' }));
-            }}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#D96B82] hover:bg-[#C0536A] text-white text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Request Custom Keychain</span>
-          </button>
-        </div>
 
       </div>
     </div>
   );
 };
-
-export default KeychainsPage;
