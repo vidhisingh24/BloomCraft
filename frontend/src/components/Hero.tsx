@@ -78,7 +78,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopNow, onCustomize }) => {
               {/* Main Crochet Showcase Image */}
               <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                 <img
-                  src="https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80"
+                  src="/images/bouquets/grand-tulip-blossom-bouquet.jpg"
                   alt="BloomCraft Handcrafted Crochet Tulips & Flowers"
                   className="w-full h-72 sm:h-96 object-cover hover:scale-105 transition-transform duration-700"
                   loading="lazy"
