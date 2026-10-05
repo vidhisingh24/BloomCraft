@@ -284,3 +284,10 @@
   }
 }
 
+
+/* Phones: never scroll sideways because one element is a few pixels too wide.
+   `clip` (unlike `hidden`) keeps position: sticky working. */
+html,
+body {
+  overflow-x: clip;
+}

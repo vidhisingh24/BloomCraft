@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ToastProvider } from './context/ToastContext';
+import { ToastProvider, useToast } from './context/ToastContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { IntroSplash } from './components/IntroSplash';
+import { AuthExperience } from './components/auth/AuthExperience';
+import { CustomerWelcomeAnimation } from './components/customer/CustomerWelcomeAnimation';
+import { CustomerDashboard } from './components/customer/CustomerDashboard';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { CategoryCards } from './components/CategoryCards';
-import { CraftStory } from './components/CraftStory';
-import { LocalVadodaraSection } from './components/LocalVadodaraSection';
 import { KeychainsPage } from './components/KeychainsPage';
 import { BouquetsPage } from './components/BouquetsPage';
 import { CustomizePage } from './components/CustomizePage';
@@ -26,29 +26,26 @@ import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { Footer } from './components/Footer';
 import type { Product, Order, DeliveryMethod } from './types';
 
-const INTRO_STORAGE_KEY = 'bloomcraft_intro_shown_v1';
-
 export function AppContent() {
-  const [showSplash, setShowSplash] = useState(() => {
-    try {
-      return !sessionStorage.getItem(INTRO_STORAGE_KEY);
-    } catch {
-      return true;
+  const { isAuthenticated, isMaker, logout } = useAuth();
+  const { showToast } = useToast();
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+  const [showCustomerWelcome, setShowCustomerWelcome] = useState<boolean>(false);
+
+  // Default initial landing view after intro animation is the Welcome Role Selection
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (isAuthenticated) {
+      return isMaker ? 'dashboard' : 'home';
     }
+    return 'auth';
   });
 
-  const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [checkoutInitialMethod, setCheckoutInitialMethod] = useState<DeliveryMethod | undefined>(undefined);
   const [trackInitialId, setTrackInitialId] = useState<string | undefined>(undefined);
 
   const handleSplashComplete = () => {
-    try {
-      sessionStorage.setItem(INTRO_STORAGE_KEY, 'true');
-    } catch {
-      // sessionStorage ignored in sandboxed environments
-    }
     setShowSplash(false);
   };
 
@@ -85,23 +82,97 @@ export function AppContent() {
     return () => window.removeEventListener('nav-to', handleCustomNav);
   }, []);
 
-  // If in Dashboard View, render the Maker Studio space
-  if (activeTab === 'dashboard') {
+  // Welcome / Authentication Landing Experience (Choose Your Experience)
+  if (activeTab === 'auth' || activeTab === 'login') {
     return (
-      <DashboardLayout
-        onExitDashboard={() => {
-          setActiveTab('home');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-      />
+      <div className="min-h-screen bg-[#FAF8F5]">
+        {showSplash && (
+          <IntroSplash onComplete={handleSplashComplete} />
+        )}
+        <div className={`transition-opacity duration-500 ${showSplash ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <AuthExperience
+            initialView="welcome"
+            onCustomerLoginSuccess={() => {
+              setShowCustomerWelcome(true);
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onMakerLoginSuccess={() => {
+              setActiveTab('dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onExploreStore={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Maker Studio Dashboard (Protected Route: Maker only)
+  if (activeTab === 'dashboard') {
+    if (!isAuthenticated || !isMaker) {
+      return (
+        <div className="min-h-screen bg-[#FAF8F5]">
+          {showSplash && (
+            <IntroSplash onComplete={handleSplashComplete} />
+          )}
+          <div className={`transition-opacity duration-500 ${showSplash ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <AuthExperience
+              initialView="maker-login"
+              onCustomerLoginSuccess={() => {
+                setShowCustomerWelcome(true);
+                setActiveTab('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onMakerLoginSuccess={() => {
+                setActiveTab('dashboard');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onExploreStore={() => {
+                setActiveTab('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-[#FAF8F5]">
+        {showSplash && (
+          <IntroSplash onComplete={handleSplashComplete} />
+        )}
+        <div className={`transition-opacity duration-500 ${showSplash ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <DashboardLayout
+            onExitDashboard={() => {
+              setActiveTab('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onLogout={() => {
+              logout();
+              setActiveTab('auth');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#3D272A] relative selection:bg-[#FFE3E8] selection:text-[#C0536A]">
-      {/* 1. Opening Animation (Preserved exactly as requested) */}
+      {/* 1. Opening Brand Film Animation */}
       {showSplash && (
         <IntroSplash onComplete={handleSplashComplete} />
+      )}
+
+      {/* 2. Customer Post-Login Welcome Animation */}
+      {showCustomerWelcome && (
+        <CustomerWelcomeAnimation onComplete={() => setShowCustomerWelcome(false)} />
       )}
 
       {/* Main Website Structure */}
@@ -111,7 +182,17 @@ export function AppContent() {
         <Navbar
           activeTab={activeTab}
           setActiveTab={(tab) => {
+            // Guard against customer switching to dashboard
+            if (tab === 'dashboard' && (!isAuthenticated || !isMaker)) {
+              showToast('Maker Studio Protected', 'Please log in with your Maker account to access the studio.', 'info');
+              setActiveTab('auth');
+              return;
+            }
             setActiveTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenLogin={() => {
+            setActiveTab('auth');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onReplaySplash={() => {
@@ -122,52 +203,24 @@ export function AppContent() {
 
         {/* Dynamic Pages / Views */}
         <main className="flex-1">
-          {/* A. HOMEPAGE */}
+          {/* A. COMPLETE CUSTOMER DASHBOARD (Handmade Crochet Boutique Experience) */}
           {activeTab === 'home' && (
-            <div>
-              {/* Hero Section */}
-              <Hero
-                onShopNow={() => {
-                  setActiveTab('keychains');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onCustomize={() => {
-                  setActiveTab('customize');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-
-              {/* Category Highlights */}
-              <CategoryCards
-                onSelectCategory={(category) => {
-                  setActiveTab(category);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-
-              {/* Vadodara & College Delivery Experience Section */}
-              <LocalVadodaraSection
-                onSelectLocalPickup={() => {
-                  setCheckoutInitialMethod('vadodara_local');
-                  setActiveTab('checkout');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onSelectCollegeDelivery={() => {
-                  setCheckoutInitialMethod('college');
-                  setActiveTab('checkout');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-
-              {/* Craft Story & Customer Reviews */}
-              <CraftStory
-                onSelectProduct={(product) => setSelectedProduct(product as any)}
-                onNavigate={(tab) => {
-                  setActiveTab(tab);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            </div>
+            <CustomerDashboard
+              onSelectProduct={(product) => setSelectedProduct(product)}
+              onNavigateOrderHistory={() => {
+                setActiveTab('orders');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onNavigateTrackOrder={() => {
+                setActiveTab('track');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onNavigatePolicies={() => {
+                setActiveTab('policies');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onReplayWelcome={() => setShowCustomerWelcome(true)}
+            />
           )}
 
           {/* B. KEYCHAINS PAGE */}
@@ -315,17 +368,19 @@ export function AppContent() {
         {/* Floating WhatsApp Button */}
         <FloatingWhatsApp />
 
-        {/* Footer */}
-        <Footer
-          onNavigate={(tab) => {
-            setActiveTab(tab);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onReplaySplash={() => {
-            window.scrollTo({ top: 0, behavior: 'instant' });
-            setShowSplash(true);
-          }}
-        />
+        {/* Footer (for non-home subpages) */}
+        {activeTab !== 'home' && (
+          <Footer
+            onNavigate={(tab) => {
+              setActiveTab(tab);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onReplaySplash={() => {
+              window.scrollTo({ top: 0, behavior: 'instant' });
+              setShowSplash(true);
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -334,11 +389,13 @@ export function AppContent() {
 export default function App() {
   return (
     <ToastProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <AppContent />
-        </WishlistProvider>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <AppContent />
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </ToastProvider>
   );
 }
