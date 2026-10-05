@@ -1,0 +1,5 @@
+{"categories": [
+  {"slug": "keychain", "name": "Keychains", "sort_order": 1, "is_active": true},
+  {"slug": "bouquet", "name": "Bouquets", "sort_order": 2, "is_active": true},
+  {"slug": "other", "name": "Other Charms", "sort_order": 3, "is_active": true}
+]}
