@@ -15,7 +15,39 @@ function getStoredOrders(): Order[] {
     storage.set(STORAGE_KEYS.ORDERS, INITIAL_MOCK_ORDERS);
     return INITIAL_MOCK_ORDERS;
   }
-  return orders;
+
+  // Remove legacy demo orders if present
+  const cleanedOrders = orders.filter(
+    (o) => o.id !== 'BC-2026-00121' && o.id !== 'BC-2026-00122' && o.id !== 'BC-2026-00123'
+  );
+
+  // Check if any order has old literal 'Keychains No.', 'Rakhi Nos.', or outdated seed order details
+  const hasLegacyItemNames = cleanedOrders.some((o) =>
+    o.items.some((i) => i.name.startsWith('Keychains No.') || i.name.startsWith('Rakhi Nos.'))
+  );
+
+  const sonalOrder = cleanedOrders.find((o) => o.id === 'BC-2026-00018');
+  const needsSonalOrderSync = !sonalOrder || sonalOrder.items.length < 2 || sonalOrder.pricing.total !== 18500 || sonalOrder.payment.status !== 'paid';
+
+  if (hasLegacyItemNames || needsSonalOrderSync) {
+    // Replace seed orders with updated INITIAL_MOCK_ORDERS while preserving any newly created orders
+    const seedIds = new Set(INITIAL_MOCK_ORDERS.map((s) => s.id));
+    const userCustomOrders = cleanedOrders.filter((o) => !seedIds.has(o.id));
+    const merged = [...userCustomOrders, ...INITIAL_MOCK_ORDERS];
+    storage.set(STORAGE_KEYS.ORDERS, merged);
+    return merged;
+  }
+
+  const existingIds = new Set(cleanedOrders.map((o) => o.id));
+  const missingSeeds = INITIAL_MOCK_ORDERS.filter((s) => !existingIds.has(s.id));
+
+  if (missingSeeds.length > 0 || cleanedOrders.length !== orders.length) {
+    const merged = [...cleanedOrders, ...missingSeeds];
+    storage.set(STORAGE_KEYS.ORDERS, merged);
+    return merged;
+  }
+
+  return cleanedOrders;
 }
 
 export const orderService = {
