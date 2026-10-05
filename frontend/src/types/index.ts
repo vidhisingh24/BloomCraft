@@ -1,4 +1,4 @@
-export type Category = 'keychain' | 'bouquet' | 'other';
+export type Category = 'keychain' | 'customized' | 'bouquet' | 'other';
 
 export interface ProductColor {
   name: string;
@@ -78,7 +78,7 @@ export interface Delivery {
   charge: number; // in paise
 }
 
-export type PaymentMethod = 'upi' | 'cod';
+export type PaymentMethod = 'upi' | 'cod' | 'gpay' | 'Google Pay (G.Pay)';
 
 export interface Payment {
   method: PaymentMethod;
