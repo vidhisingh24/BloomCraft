@@ -1,32 +1,8 @@
-export interface SiteConfig {
-  name: string;
-  tagline: string;
-  heroHeading: string;
-  heroSubheading: string;
-  currency: string;
-  whatsappNumber: string; // Easily customizable in one place
-  whatsappFormatted: string;
-  instagramHandle: string;
-  instagramUrl: string;
-  email: string;
-  address: string;
-  shippingNote: string;
-}
+// Single source of truth lives in site.config.ts; this module keeps the WhatsApp helpers.
+import { siteConfig } from './site.config';
 
-export const siteConfig: SiteConfig = {
-  name: "BLOOMCRAFT",
-  tagline: "Handcrafted with love, made to bloom.",
-  heroHeading: "Little Things, Handcrafted With Love.",
-  heroSubheading: "Beautiful crochet creations made specially for your special moments.",
-  currency: "₹",
-  whatsappNumber: "919876543210", // Primary business WhatsApp number
-  whatsappFormatted: "+91 98765 43210",
-  instagramHandle: "@bloomcraft.crochet",
-  instagramUrl: "https://instagram.com",
-  email: "hello@bloomcraft.in",
-  address: "Handmade Studio, Jaipur & Mumbai, India",
-  shippingNote: "🌸 Free handcrafted keepsake gift card on orders above ₹799",
-};
+export { siteConfig };
+export type { SiteConfig } from './site.config';
 
 /**
  * Builds a direct WhatsApp chat link with an optional pre-filled message
