@@ -1,0 +1,38 @@
+{
+  "store_open": true,
+  "closed_message": null,
+  "delivery_methods": [
+    {"id": "vadodara_local", "enabled": true, "name": "Vadodara Local Handover", "tagline": "Meet the maker at a convenient Vadodara spot", "badge": "📍 Free Pickup", "fee_paise": 0, "free_from_subtotal_paise": null, "estimated_days": "1–2 days (flexible slot)"},
+    {"id": "college", "enabled": true, "name": "College Campus Delivery", "tagline": "Hand-delivered to your campus gate or department", "badge": "🏫 Campus Special", "fee_paise": 0, "free_from_subtotal_paise": null, "estimated_days": "1–3 days"},
+    {"id": "parcel", "enabled": true, "name": "All-India Parcel Courier", "tagline": "Standard tracked shipping with sturdy protective packaging", "badge": "📦 Pan India", "fee_paise": 6000, "free_from_subtotal_paise": 99900, "estimated_days": "Dispatch in 2-3 days + 3–7 days transit"}
+  ],
+  "vadodara_areas": ["Alkapuri", "Fatehgunj", "Sayajigunj", "Manjalpur", "Gotri", "Karelibaug", "Akota", "Gorwa", "Old Padra Road", "Vasna-Bhayli Road", "Sama-Savli Road", "Waghodia Road", "Harni Road", "Subhanpura", "Nizampura", "Makarpura", "Ellora Park", "Chhani"],
+  "time_slots": [
+    {"id": "morning", "label": "Morning (9:00 AM – 12:00 PM)"},
+    {"id": "afternoon", "label": "Afternoon (1:00 PM – 4:30 PM)"},
+    {"id": "evening", "label": "Evening (5:00 PM – 8:30 PM)"}
+  ],
+  "colleges": [
+    {"id": "msu-main", "name": "The Maharaja Sayajirao University of Baroda (MSU) - Main Campus", "campus_area": "Sayajigunj / Fatehgunj, Vadodara", "handover_point": "University Main Gate / Hansa Mehta Library"},
+    {"id": "msu-techo", "name": "MSU - Faculty of Technology & Engineering (Kalabhavan)", "campus_area": "Dandia Bazar, Vadodara", "handover_point": "Kalabhavan Main Gate"},
+    {"id": "msu-finearts", "name": "MSU - Faculty of Fine Arts", "campus_area": "Sayajigunj, Vadodara", "handover_point": "Fine Arts Pavilion / Canteen"},
+    {"id": "msu-commerce", "name": "MSU - Faculty of Commerce / Arts (Fatehgunj)", "campus_area": "Fatehgunj, Vadodara", "handover_point": "Commerce Building Main Entrance"},
+    {"id": "msu-science", "name": "MSU - Faculty of Science", "campus_area": "Sayajigunj, Vadodara", "handover_point": "C.C. Shroff Hall Gate"},
+    {"id": "parul-uni", "name": "Parul University", "campus_area": "Limda, Waghodia Road, Vadodara", "handover_point": "Gate No. 1 / Food Court Plaza"},
+    {"id": "navrachana", "name": "Navrachana University (NUV)", "campus_area": "Vasna-Bhayli Road, Vadodara", "handover_point": "NUV Front Plaza Gate"},
+    {"id": "itm-sls", "name": "ITM (SLS) Baroda University", "campus_area": "Paldi, Jarod, Vadodara", "handover_point": "Main Academic Block Reception"},
+    {"id": "gsfc-uni", "name": "GSFC University", "campus_area": "Fertilizernagar, Vadodara", "handover_point": "Bhavan 1 Gate / Vigyan Bhavan"},
+    {"id": "svit-vasad", "name": "SVIT - Sardar Vallabhbhai Patel Institute of Tech", "campus_area": "Vasad, Vadodara", "handover_point": "SVIT Administrative Porch Gate"},
+    {"id": "sigma-uni", "name": "Sigma University", "campus_area": "Bakrol, Ajwa Road, Vadodara", "handover_point": "Main Campus Gate"},
+    {"id": "bits-edu", "name": "BITS Edu Campus (Babaria)", "campus_area": "Varnama, Vadodara", "handover_point": "Campus Main Entrance Gate"},
+    {"id": "baroda-med", "name": "Baroda Medical College", "campus_area": "SSG Hospital Compound, Anandpura", "handover_point": "College Library Gate"}
+  ],
+  "allow_other_college": true,
+  "gift_wrap_price_paise": 4000,
+  "payment_methods": {
+    "upi": {"enabled": true, "vpa": "vidhiisingh2403@okicici", "payee_name": "Vidhi Singh"},
+    "cod": {"enabled": true}
+  },
+  "grievance_contact": null,
+  "default_custom_request_seller_id": null
+}
