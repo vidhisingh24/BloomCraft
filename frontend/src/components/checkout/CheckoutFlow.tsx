@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
-import { siteConfig } from '../../config/site.config';
 import { DELIVERY_METHODS, VADODARA_AREAS, VADODARA_TIME_SLOTS, INDIAN_STATES } from '../../config/delivery.config';
 import { MOCK_COLLEGES } from '../../data/mock/colleges';
 import { lookupPincode } from '../../data/mock/pincodes';
@@ -11,6 +10,8 @@ import { validateCustomer, validateDelivery, normalizeIndianPhone } from '../../
 import { storage, STORAGE_KEYS } from '../../services/storage';
 import { orderService } from '../../services/orderService';
 import { trackEvent } from '../../utils/analytics';
+import { UpiPaymentPanel } from './UpiPaymentPanel';
+import { UTR_PATTERN } from './upi';
 import type { Customer, DeliveryMethod, PaymentMethod, Order, CartItem } from '../../types';
 import { 
   User, 
@@ -19,7 +20,6 @@ import {
   CheckCircle2, 
   ArrowLeft, 
   ArrowRight, 
-  Copy, 
   Check, 
   ShoppingBag, 
   Truck, 
@@ -105,7 +105,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const { showToast } = useToast();
 
   const [draft, setDraft] = useState<CheckoutDraft>(() => {
-    const saved = storage.get<CheckoutDraft>(STORAGE_KEYS.CHECKOUT_DRAFT, DEFAULT_DRAFT);
+    const saved = { ...DEFAULT_DRAFT, ...storage.get<CheckoutDraft>(STORAGE_KEYS.CHECKOUT_DRAFT, DEFAULT_DRAFT) };
     if (initialMethod) {
       return { ...saved, deliveryMethod: initialMethod };
     }
@@ -113,7 +113,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [copiedUpi, setCopiedUpi] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -169,13 +168,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const handleCopyUpi = () => {
-    navigator.clipboard.writeText(siteConfig.upiId);
-    setCopiedUpi(true);
-    showToast('UPI ID Copied! 📋', siteConfig.upiId, 'cart');
-    setTimeout(() => setCopiedUpi(false), 2500);
-  };
-
   const goToStep = (step: number) => {
     setDraft((d) => ({ ...d, step }));
     setErrors({});
@@ -212,6 +204,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   const handleNextFromStep3 = (e: React.FormEvent) => {
     e.preventDefault();
+    if (draft.paymentMethod === 'upi' && !UTR_PATTERN.test(draft.upiTxnRef)) {
+      setErrors({
+        upiTxnRef: 'After paying, enter the 12-digit UPI reference (UTR) — or choose Pay on Handover',
+      });
+      return;
+    }
+    setErrors({});
     trackEvent('add_payment_info', { paymentMethod: draft.paymentMethod });
     goToStep(4);
   };
@@ -253,8 +252,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         },
         payment: {
           method: draft.paymentMethod,
-          status: draft.paymentMethod === 'upi' && draft.upiTxnRef ? ('awaiting_verification' as const) : ('pending' as const),
-          upiTxnRef: draft.upiTxnRef.trim() || undefined,
+          // UPI: the maker checks the UTR in the bank app and marks it paid from the dashboard
+          status:
+            draft.paymentMethod === 'upi' && UTR_PATTERN.test(draft.upiTxnRef)
+              ? ('awaiting_verification' as const)
+              : ('pending' as const),
+          upiTxnRef:
+            draft.paymentMethod === 'upi' && UTR_PATTERN.test(draft.upiTxnRef)
+              ? draft.upiTxnRef
+              : undefined,
         },
         giftWrapRequested,
         giftMessage: giftMessage.trim() || undefined,
@@ -311,23 +317,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 md:py-12">
       {/* Header & Back Link */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#F0E6E8]">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8 pb-4 border-b border-[#F0E6E8]">
         <div>
           <span className="text-xs uppercase tracking-widest text-[#D96B82] font-semibold">BloomCraft Checkout</span>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#3D272A]">Complete Your Handmade Order</h1>
+          <h1 className="text-xl sm:text-3xl font-serif font-bold text-[#3D272A]">Complete Your Handmade Order</h1>
         </div>
         <button
           onClick={onBackToShop}
-          className="text-sm font-medium text-[#7A5B62] hover:text-[#D96B82] flex items-center gap-1.5 transition-colors"
+          className="self-start sm:self-auto text-sm font-medium text-[#7A5B62] hover:text-[#D96B82] flex items-center gap-1.5 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Return to Shop
         </button>
       </div>
 
       {/* Progress Stepper */}
-      <div className="mb-10">
+      <div className="mb-6 sm:mb-10 px-1">
         <div className="flex items-center justify-between relative">
           {/* Background Connecting Line */}
           <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-[#EBD8DC] -translate-y-1/2 z-0" />
@@ -361,7 +367,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
                 <span
-                  className={`text-xs sm:text-sm font-medium mt-2 transition-colors ${
+                  className={`text-[11px] sm:text-sm font-medium mt-1.5 sm:mt-2 transition-colors ${
                     isCurrent ? 'text-[#3D272A] font-bold' : isDone ? 'text-[#D96B82]' : 'text-[#A38B90]'
                   }`}
                 >
@@ -374,8 +380,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       </div>
 
       {/* Main Grid: Form on Left, Order Summary Card on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#F0E6E8]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-4 sm:p-8 shadow-sm border border-[#F0E6E8]">
           
           {/* STEP 1: CUSTOMER DETAILS */}
           {draft.step === 1 && (
@@ -423,18 +429,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </span>
                   <input
                     type="tel"
-                    inputMode="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
                     name="tel"
-                    autoComplete="tel"
+                    autoComplete="tel-national"
                     required
-                    placeholder="9876543210"
+                    placeholder="9316097667"
                     value={draft.customer.phone}
-                    onChange={(e) =>
+                    onKeyDown={(e) => {
+                      // Digits only: block letters and symbols (navigation/editing keys still work)
+                      if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      // Also strips letters from paste/autofill; drops a pasted +91 / 0 prefix
+                      let digits = e.target.value.replace(/\D/g, '');
+                      if (digits.length > 10 && digits.startsWith('91')) digits = digits.slice(2);
+                      if (digits.length > 10 && digits.startsWith('0')) digits = digits.slice(1);
+                      digits = digits.slice(0, 10);
                       setDraft((d) => ({
                         ...d,
-                        customer: { ...d.customer, phone: e.target.value },
-                      }))
-                    }
+                        customer: { ...d.customer, phone: digits },
+                      }));
+                    }}
                     className={`w-full pl-14 pr-4 py-3 rounded-xl border text-base ${
                       errors.phone ? 'border-red-400 bg-red-50/30' : 'border-[#EBD8DC] focus:border-[#D96B82]'
                     } focus:outline-none focus:ring-2 focus:ring-[#FFE3E8]`}
@@ -801,7 +820,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         maxLength={6}
                         placeholder="e.g. 390001"
                         value={draft.parcelDetails.pincode}
-                        onChange={(e) => handlePincodeChange(e.target.value)}
+                        onChange={(e) => handlePincodeChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         className={`w-full px-4 py-2.5 rounded-xl border text-sm bg-white ${
                           errors.pincode ? 'border-red-400' : 'border-[#EBD8DC]'
                         } focus:outline-none focus:border-[#D96B82]`}
@@ -891,17 +910,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </div>
               )}
 
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-4 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => goToStep(1)}
-                  className="px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
+                  className="shrink-0 px-4 sm:px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-3.5 rounded-full bg-[#D96B82] text-white font-medium hover:bg-[#C0536A] shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                  className="px-5 sm:px-8 py-3.5 rounded-full bg-[#D96B82] text-white text-sm sm:text-base font-medium hover:bg-[#C0536A] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   Proceed to Payment <ArrowRight className="w-4 h-4" />
                 </button>
@@ -921,122 +940,82 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </p>
               </div>
 
-              {/* Payment Methods */}
-              <div className="space-y-3">
-                {/* 1. UPI */}
-                <div
-                  onClick={() => setDraft((d) => ({ ...d, paymentMethod: 'upi' }))}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                    draft.paymentMethod === 'upi'
-                      ? 'border-[#D96B82] bg-[#FFF0F3]/60 shadow-sm ring-2 ring-[#FFE3E8]'
-                      : 'border-[#F0E6E8] bg-white hover:border-[#D96B82]/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#FFE3E8] flex items-center justify-center text-[#D96B82]">
-                        <QrCode className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-[#3D272A]">UPI Online Payment (Recommended)</h3>
-                        <p className="text-xs text-[#7A5B62]">Google Pay, PhonePe, Paytm, BHIM</p>
-                      </div>
-                    </div>
-                    <input
-                      type="radio"
-                      checked={draft.paymentMethod === 'upi'}
-                      onChange={() => setDraft((d) => ({ ...d, paymentMethod: 'upi' }))}
-                      className="w-4 h-4 accent-[#D96B82]"
-                    />
-                  </div>
-
-                  {draft.paymentMethod === 'upi' && (
-                    <div className="mt-4 pt-4 border-t border-[#F0E6E8] space-y-4">
-                      <div className="bg-white p-4 rounded-xl border border-[#EBD8DC] flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <div>
-                          <span className="text-[11px] text-[#A38B90] uppercase font-bold tracking-wider">BloomCraft Official UPI ID</span>
-                          <p className="font-mono font-bold text-[#3D272A] text-base">{siteConfig.upiId}</p>
-                          <p className="text-xs text-[#7A5B62]">{siteConfig.upiPayeeName}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCopyUpi}
-                          className="px-4 py-2 rounded-lg bg-[#FAF8F5] border border-[#EBD8DC] text-xs font-semibold text-[#3D272A] hover:bg-[#FFE3E8] transition-all flex items-center gap-1.5 shrink-0"
-                        >
-                          {copiedUpi ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-[#D96B82]" />}
-                          {copiedUpi ? 'Copied!' : 'Copy UPI ID'}
-                        </button>
-                      </div>
-
-                      {/* Mobile UPI Deep Link */}
-                      <a
-                        href={`upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(siteConfig.upiPayeeName)}&am=${(pricing.total / 100).toFixed(2)}&tn=BloomCraft%20Order`}
-                        className="sm:hidden block w-full py-3 rounded-xl bg-[#3D272A] text-white text-center font-medium text-sm shadow-md"
+              {/* Payment Methods: both choices visible up front, details below */}
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3" role="radiogroup" aria-label="Payment method">
+                {(
+                  [
+                    {
+                      id: 'upi' as const,
+                      title: 'UPI (Recommended)',
+                      subtitle: 'GPay, PhonePe, Paytm, BHIM',
+                      icon: <QrCode className="w-5 h-5" />,
+                    },
+                    {
+                      id: 'cod' as const,
+                      title: 'Pay on Handover',
+                      subtitle: 'Cash or UPI when you receive it',
+                      icon: <ShoppingBag className="w-5 h-5" />,
+                    },
+                  ]
+                ).map((option) => {
+                  const selected = draft.paymentMethod === option.id;
+                  return (
+                    <label
+                      key={option.id}
+                      className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
+                        selected
+                          ? 'border-[#D96B82] bg-[#FFF0F3]/60 shadow-sm ring-2 ring-[#FFE3E8]'
+                          : 'border-[#F0E6E8] bg-white hover:border-[#D96B82]/50'
+                      }`}
+                    >
+                      <span
+                        className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${
+                          selected ? 'bg-[#FFE3E8] text-[#D96B82]' : 'bg-[#FAF8F5] text-[#7A5B62]'
+                        }`}
                       >
-                        ⚡ Open Any UPI App ({formatPaise(pricing.total)})
-                      </a>
-
-                      <div>
-                        <label className="block text-xs font-bold text-[#3D272A] uppercase tracking-wider mb-1">
-                          UPI Transaction Reference / UTR Number <span className="text-[10px] font-normal text-[#A38B90]">(Optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 12-digit UTR from your payment app"
-                          value={draft.upiTxnRef}
-                          onChange={(e) =>
-                            setDraft((d) => ({
-                              ...d,
-                              upiTxnRef: e.target.value,
-                            }))
-                          }
-                          className="w-full px-4 py-2.5 rounded-xl border border-[#EBD8DC] text-sm bg-white focus:outline-none focus:border-[#D96B82]"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Cash on Handover / COD */}
-                <div
-                  onClick={() => setDraft((d) => ({ ...d, paymentMethod: 'cod' }))}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                    draft.paymentMethod === 'cod'
-                      ? 'border-[#D96B82] bg-[#FFF0F3]/60 shadow-sm ring-2 ring-[#FFE3E8]'
-                      : 'border-[#F0E6E8] bg-white hover:border-[#D96B82]/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] flex items-center justify-center text-[#7A5B62]">
-                        <ShoppingBag className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-[#3D272A]">Pay on Handover / Delivery</h3>
-                        <p className="text-xs text-[#7A5B62]">Cash or UPI scan when you receive your handmade blooms</p>
-                      </div>
-                    </div>
-                    <input
-                      type="radio"
-                      checked={draft.paymentMethod === 'cod'}
-                      onChange={() => setDraft((d) => ({ ...d, paymentMethod: 'cod' }))}
-                      className="w-4 h-4 accent-[#D96B82]"
-                    />
-                  </div>
-                </div>
+                        {option.icon}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-semibold text-sm text-[#3D272A]">{option.title}</span>
+                        <span className="block text-xs text-[#7A5B62] truncate">{option.subtitle}</span>
+                      </span>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={selected}
+                        onChange={() => setDraft((d) => ({ ...d, paymentMethod: option.id }))}
+                        className="w-4 h-4 accent-[#D96B82] shrink-0"
+                      />
+                    </label>
+                  );
+                })}
               </div>
 
-              <div className="pt-4 flex items-center justify-between">
+              {draft.paymentMethod === 'upi' ? (
+                <UpiPaymentPanel
+                  amountPaise={pricing.total}
+                  utr={draft.upiTxnRef}
+                  error={errors.upiTxnRef}
+                  onUtrChange={(utr) => setDraft((d) => ({ ...d, upiTxnRef: utr }))}
+                />
+              ) : (
+                <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#F0E6E8] text-xs text-[#7A5B62]">
+                  Pay <span className="font-bold text-[#3D272A]">{formatPaise(pricing.total)}</span> in cash or by UPI
+                  when you receive your order. No advance needed.
+                </div>
+              )}
+
+              <div className="pt-4 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => goToStep(2)}
-                  className="px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
+                  className="shrink-0 px-4 sm:px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-3.5 rounded-full bg-[#D96B82] text-white font-medium hover:bg-[#C0536A] shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                  className="px-5 sm:px-8 py-3.5 rounded-full bg-[#D96B82] text-white text-sm sm:text-base font-medium hover:bg-[#C0536A] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   Review Order <ArrowRight className="w-4 h-4" />
                 </button>
@@ -1110,10 +1089,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   <div>
                     <span className="text-[11px] font-bold text-[#D96B82] uppercase tracking-wider">Payment Method</span>
                     <p className="font-semibold text-sm text-[#3D272A] mt-0.5">
-                      {draft.paymentMethod === 'upi' ? 'UPI Payment' : 'Pay on Handover (Cash/UPI)'}
+                      {draft.paymentMethod === 'upi'
+                        ? 'UPI · paid, awaiting the maker’s confirmation'
+                        : 'Pay on Handover (Cash/UPI)'}
                     </p>
-                    {draft.upiTxnRef && (
-                      <p className="text-xs text-[#7A5B62]">UTR Ref: {draft.upiTxnRef}</p>
+                    {draft.paymentMethod === 'upi' && draft.upiTxnRef && (
+                      <p className="text-xs text-[#7A5B62] font-mono">UTR Ref: {draft.upiTxnRef}</p>
                     )}
                   </div>
                   <button
@@ -1173,11 +1154,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 {errors.terms && <p className="text-xs text-red-500 mt-1">{errors.terms}</p>}
               </div>
 
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-4 flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => goToStep(3)}
-                  className="px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
+                  className="shrink-0 px-4 sm:px-6 py-3 rounded-full border border-[#EBD8DC] text-[#7A5B62] font-medium hover:bg-[#FAF8F5] transition-all flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -1185,7 +1166,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   type="button"
                   onClick={handlePlaceOrder}
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto px-10 py-4 rounded-full bg-[#D96B82] text-white font-bold text-base hover:bg-[#C0536A] shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 sm:flex-none px-4 sm:px-10 py-4 rounded-full bg-[#D96B82] text-white font-bold text-sm sm:text-base hover:bg-[#C0536A] shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -1205,7 +1186,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         </div>
 
         {/* RIGHT COLUMN: STICKY ORDER SUMMARY */}
-        <div className="lg:col-span-5 bg-[#FAF8F5] rounded-2xl p-6 border border-[#F0E6E8] lg:sticky lg:top-24">
+        <div className="lg:col-span-5 bg-[#FAF8F5] rounded-2xl p-4 sm:p-6 border border-[#F0E6E8] lg:sticky lg:top-24">
           <h3 className="font-serif font-bold text-lg text-[#3D272A] pb-3 border-b border-[#EBD8DC] flex items-center justify-between">
             <span>Order Summary</span>
             <span className="text-xs font-sans font-semibold text-[#D96B82] bg-[#FFF0F3] px-2.5 py-1 rounded-full">
