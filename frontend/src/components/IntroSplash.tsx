@@ -1,12 +1,13 @@
 import React from 'react';
-import { BloomcraftIntro } from './BloomcraftIntro';
+import { IntroAnimation } from './intro/IntroAnimation';
 
 interface IntroSplashProps {
   onComplete: () => void;
 }
 
 export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
-  return <BloomcraftIntro onComplete={onComplete} />;
+  return <IntroAnimation onComplete={onComplete} />;
 };
 
 export default IntroSplash;
+
