@@ -60,9 +60,9 @@ describe('Validation utilities', () => {
   describe('validateCustomer', () => {
     it('validates customer payload', () => {
       const valid = validateCustomer({
-        name: 'Priya Sharma',
+        name: 'Sonal Raj',
         phone: '9876543210',
-        email: 'priya@example.com',
+        email: 'sonal@example.com',
       });
       expect(valid.isValid).toBe(true);
       expect(Object.keys(valid.errors).length).toBe(0);
