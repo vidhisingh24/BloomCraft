@@ -26,6 +26,7 @@ export const ProductsManager: React.FC<ProductsManagerProps> = ({
   const categories = [
     { id: 'all', label: 'All Items' },
     { id: 'keychain', label: 'Keychains' },
+    { id: 'customized', label: 'Customized' },
     { id: 'bouquet', label: 'Bouquets' },
     { id: 'other', label: 'Other Charms' },
   ];
