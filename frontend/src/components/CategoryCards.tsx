@@ -14,8 +14,8 @@ export const CategoryCards: React.FC<CategoryCardsProps> = ({ onSelectCategory }
       description: 'Cute handmade crochet keychains.',
       accentColor: 'from-[#FFE3E8] to-[#FFF0F3]',
       tag: '6+ Designs Available',
-      image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80',
-      priceFrom: 'Starting from ₹179',
+      image: '/images/keychains/tulip_pink_duo.jpg',
+      priceFrom: 'Starting from ₹85',
     },
     {
       id: 'bouquets' as const,
@@ -24,8 +24,8 @@ export const CategoryCards: React.FC<CategoryCardsProps> = ({ onSelectCategory }
       description: 'Beautiful flowers that never fade.',
       accentColor: 'from-[#FFF0F3] to-[#FFE3E8]',
       tag: 'Everlasting Stems',
-      image: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80',
-      priceFrom: 'Starting from ₹799',
+      image: '/images/bouquets/grand-tulip-blossom-bouquet.jpg',
+      priceFrom: 'Starting from ₹580',
     },
     {
       id: 'customize' as const,
@@ -34,8 +34,8 @@ export const CategoryCards: React.FC<CategoryCardsProps> = ({ onSelectCategory }
       description: 'Have an idea? Let us create it.',
       accentColor: 'from-[#FFE8EC] to-[#FFF5F7]',
       tag: 'Bespoke Handmade',
-      image: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=600&q=80',
-      priceFrom: 'Instant Custom Quote',
+      image: '/images/customized/custom_crimson_mesh_bow.png',
+      priceFrom: 'Starting from ₹200',
     },
   ];
 
