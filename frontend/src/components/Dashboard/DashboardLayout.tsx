@@ -8,13 +8,15 @@ import {
   ArrowLeft, 
   Menu, 
   X, 
-  RefreshCw
+  RefreshCw,
+  LogOut
 } from 'lucide-react';
 import type { Order, CustomRequest, Product, OrderStatus } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customRequestService } from '../../services/customRequestService';
 import { productService } from '../../services/productService';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 import { DashboardOverview } from './DashboardOverview';
 import { OrdersManager } from './OrdersManager';
@@ -24,11 +26,13 @@ import { DeliveryManager } from './DeliveryManager';
 
 interface DashboardLayoutProps {
   onExitDashboard: () => void;
+  onLogout?: () => void;
 }
 
 export type TabType = 'overview' | 'orders' | 'custom' | 'products' | 'delivery';
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboard }) => {
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboard, onLogout }) => {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -143,6 +147,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
     { id: 'delivery', label: 'Delivery Hub', icon: <Truck className="w-4 h-4" /> },
   ];
 
+  const handleLogout = () => {
+    logout();
+    if (onLogout) {
+      onLogout();
+    } else {
+      onExitDashboard();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#3D272A] flex flex-col md:flex-row relative">
       {/* Mobile Top Header */}
@@ -156,7 +169,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
               BLOOMCRAFT
             </span>
             <span className="text-[10px] text-[#C0536A] font-semibold tracking-wider uppercase">
-              Maker Studio Hub
+              {user?.name ? `${user.name} • Studio` : 'Maker Studio Hub'}
             </span>
           </div>
         </div>
@@ -167,6 +180,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
             className="p-1.5 rounded-lg text-xs font-semibold text-[#7A5B62] bg-[#FAF8F5] border border-[#EBD8DC] flex items-center gap-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Shop
+          </button>
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="p-1.5 rounded-lg text-xs font-semibold text-[#C0536A] bg-[#FFE3E8]/80 border border-[#F4A6B7]/40 flex items-center gap-1"
+          >
+            <LogOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -224,8 +244,32 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
           </nav>
         </div>
 
-        {/* Footer Actions */}
-        <div className="space-y-3 pt-6 border-t border-[#F4A6B7]/20">
+        {/* Footer Actions & Logged-in User Profile */}
+        <div className="space-y-2.5 pt-4 border-t border-[#F4A6B7]/20">
+          {/* User Profile Card */}
+          <div className="p-2.5 rounded-2xl bg-[#FFE3E8]/50 border border-[#F4A6B7]/30 flex items-center justify-between">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <div className="w-7 h-7 rounded-full bg-white border border-[#F4A6B7]/40 flex items-center justify-center text-xs shrink-0">
+                🌸
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-xs font-bold text-[#3D272A] block truncate leading-tight">
+                  {user?.name || 'Studio Maker'}
+                </span>
+                <span className="text-[10px] text-[#7A5B62] block truncate">
+                  {user?.email || 'vidhi@bloomcraft.com'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Sign Out"
+              className="p-1.5 rounded-lg text-[#7A5B62] hover:text-[#C0536A] hover:bg-white transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           <button
             onClick={loadDashboardData}
             className="w-full py-2 px-3 rounded-xl border border-[#EBD8DC] text-xs font-semibold text-[#7A5B62] hover:bg-[#FFF0F3] transition-all flex items-center justify-center gap-2"
