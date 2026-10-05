@@ -1,0 +1,19 @@
+title = "BloomCraft backend"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Local secrets, env files, virtualenv, runtime data, lockfile and caches"
+paths = [
+    '''(^|[\\/])secrets[\\/]''',
+    '''\.env$''',
+    '''(^|[\\/])\.venv[\\/]''',
+    '''(^|[\\/])var[\\/]''',
+    '''uv\.lock''',
+    '''__pycache__[\\/]''',
+    '''(^|[\\/])\.(mypy|ruff|pytest)_cache[\\/]''',
+    '''(^|[\\/])htmlcov[\\/]''',
+    '''(^|[\\/])\.hypothesis[\\/]''',
+    '''(^|[\\/])\.coverage''',
+]
