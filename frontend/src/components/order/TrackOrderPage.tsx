@@ -123,9 +123,11 @@ export const TrackOrderPage: React.FC<TrackOrderPageProps> = ({
               </label>
               <input
                 type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 placeholder="10-digit mobile"
                 value={phoneQuery}
-                onChange={(e) => setPhoneQuery(e.target.value)}
+                onChange={(e) => setPhoneQuery(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 className="w-full px-4 py-3 rounded-xl border border-[#EBD8DC] text-sm focus:outline-none focus:border-[#D96B82] focus:ring-2 focus:ring-[#FFE3E8]"
               />
             </div>

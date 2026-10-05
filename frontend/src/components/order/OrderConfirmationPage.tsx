@@ -94,6 +94,33 @@ export const OrderConfirmationPage: React.FC<OrderConfirmationPageProps> = ({
         </div>
       </div>
 
+      {/* Payment status */}
+      <div
+        className={`rounded-2xl p-4 border text-xs flex items-start gap-3 ${
+          order.payment.status === 'paid'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : order.payment.status === 'awaiting_verification'
+              ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-[#FAF8F5] border-[#F0E6E8] text-[#7A5B62]'
+        }`}
+      >
+        <CheckCircle2 className="w-5 h-5 shrink-0" />
+        <div>
+          <p className="font-bold text-sm">
+            {order.payment.status === 'paid'
+              ? 'Payment confirmed'
+              : order.payment.status === 'awaiting_verification'
+                ? 'UPI payment received — the maker is confirming it'
+                : order.payment.method === 'cod'
+                  ? 'Pay on handover (cash or UPI)'
+                  : 'Payment pending'}
+          </p>
+          {order.payment.upiTxnRef && (
+            <p className="font-mono mt-0.5">UPI reference (UTR): {order.payment.upiTxnRef}</p>
+          )}
+        </div>
+      </div>
+
       {/* Live Order Status Tracker */}
       <OrderStatusTracker
         status={order.status}
