@@ -32,14 +32,14 @@ export const DeliveryManager: React.FC<DeliveryManagerProps> = ({
       : parcelOrders;
 
   const handleWhatsApp = (order: Order) => {
-    const phone = order.customer.phone.replace(/\D/g, '');
+    const phone = (order.customer.phone || '').replace(/\D/g, '');
     let text = '';
     if (order.delivery.method === 'vadodara_local') {
-      text = `🌸 Hi ${order.customer.name}! BloomCraft here regarding your pickup in ${(order.delivery.details as any).area} for order *${order.id}*. What time works best for you today?`;
+      text = `🌸 Hi ${order.customer.name}! BloomCraft here regarding your pickup in ${(order.delivery.details as any)?.area || 'Vadodara'} for order *${order.id}*. What time works best for you today?`;
     } else if (order.delivery.method === 'college') {
-      text = `🌸 Hi ${order.customer.name}! BloomCraft here regarding your college delivery at ${(order.delivery.details as any).collegeName} (${(order.delivery.details as any).deliveryPoint}) for order *${order.id}*.`;
+      text = `🌸 Hi ${order.customer.name}! BloomCraft here regarding your college delivery at ${(order.delivery.details as any)?.collegeName || 'Campus'} (${(order.delivery.details as any)?.deliveryPoint || 'Gate'}) for order *${order.id}*.`;
     } else {
-      text = `🌸 Hi ${order.customer.name}! Your BloomCraft parcel order *${order.id}* has been dispatched via express courier to ${(order.delivery.details as any).city}!`;
+      text = `🌸 Hi ${order.customer.name}! Your BloomCraft parcel order *${order.id}* has been dispatched via express courier to ${(order.delivery.details as any)?.city || 'Vadodara'}!`;
     }
     window.open(buildWhatsAppLink(text, phone), '_blank');
   };
@@ -179,7 +179,7 @@ export const DeliveryManager: React.FC<DeliveryManagerProps> = ({
                   <div>
                     <span className="font-bold text-[#3D272A] uppercase tracking-wider block mb-0.5">Recipient</span>
                     <p className="font-semibold text-sm text-[#3D272A]">{order.customer.name}</p>
-                    <p>+91 {order.customer.phone}</p>
+                    <p>{order.customer.phone ? `+91 ${order.customer.phone}` : 'Direct Handover'}</p>
                   </div>
 
                   <div>
