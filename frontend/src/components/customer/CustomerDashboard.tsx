@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SocialLinks } from '../SocialIcons';
 import { 
   Heart, 
   ShoppingBag, 
@@ -648,26 +649,7 @@ export const CustomerDashboard: React.FC<CustomerDashboardProps> = ({
               </p>
 
               {/* Social & Contact */}
-              <div className="pt-2 flex items-center gap-3">
-                <a
-                  href={customWhatsAppUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-[#25D366]/15 hover:bg-[#25D366] text-[#128C7E] hover:text-white flex items-center justify-center transition-all shadow-xs"
-                  aria-label="WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4 fill-current" />
-                </a>
-                <a
-                  href={siteConfig.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-[#FFE3E8] hover:bg-[#D96B82] text-[#C0536A] hover:text-white flex items-center justify-center transition-all shadow-xs"
-                  aria-label="Instagram"
-                >
-                  <span className="text-xs font-bold">IG</span>
-                </a>
-              </div>
+              <SocialLinks className="pt-2" />
             </div>
 
             {/* Col 2: Navigation Anchors */}

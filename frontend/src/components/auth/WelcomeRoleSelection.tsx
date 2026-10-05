@@ -1,4 +1,5 @@
 import React from 'react';
+import { SocialLinks } from '../SocialIcons';
 import { Sparkles, ArrowRight, Heart, LayoutDashboard, ShoppingBag, Store } from 'lucide-react';
 import { siteConfig } from '../../config/site.config';
 
@@ -215,6 +216,7 @@ export const WelcomeRoleSelection: React.FC<WelcomeRoleSelectionProps> = ({
 
       {/* Footer Note */}
       <footer className="relative z-10 py-5 text-center text-xs text-[#A4838B] border-t border-[#F4A6B7]/20">
+        <SocialLinks size="sm" className="justify-center mb-2" />
         <p>© 2026 {siteConfig.name} • Vadodara Handmade Crochet Studio • Handcrafted with 🌸</p>
       </footer>
     </div>

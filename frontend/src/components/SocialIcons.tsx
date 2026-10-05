@@ -1,4 +1,6 @@
 import React from 'react';
+import { siteConfig } from '../config/site.config';
+import { buildWhatsAppLink } from '../utils/whatsapp';
 
 /** Official-style brand marks (monochrome glyphs placed on the brand colours). */
 
@@ -17,3 +19,48 @@ export const WhatsAppLogo: React.FC<{ className?: string }> = ({ className = 'w-
 export const INSTAGRAM_GRADIENT =
   'linear-gradient(45deg, #F58529 0%, #FEDA77 20%, #DD2A7B 55%, #8134AF 80%, #515BD4 100%)';
 export const WHATSAPP_GREEN = '#25D366';
+
+interface SocialLinksProps {
+  /** Pre-filled WhatsApp message (defaults to a general enquiry). */
+  whatsappMessage?: string;
+  size?: 'sm' | 'md';
+  className?: string;
+}
+
+const DEFAULT_WHATSAPP_MESSAGE = "Hi BloomCraft! 🌸 I'd love to know more about your crochet collection.";
+
+/** Instagram + WhatsApp brand buttons used in every footer. */
+export const SocialLinks: React.FC<SocialLinksProps> = ({
+  whatsappMessage = DEFAULT_WHATSAPP_MESSAGE,
+  size = 'md',
+  className = '',
+}) => {
+  const box = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  const icon = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <a
+        href={siteConfig.instagramUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${box} rounded-xl text-white flex items-center justify-center shadow-sm hover:scale-110 hover:shadow-md transition-all`}
+        style={{ background: INSTAGRAM_GRADIENT }}
+        aria-label={`BloomCraft on Instagram (${siteConfig.instagramHandle})`}
+        title={`Instagram ${siteConfig.instagramHandle}`}
+      >
+        <InstagramLogo className={icon} />
+      </a>
+      <a
+        href={buildWhatsAppLink(whatsappMessage)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${box} rounded-full text-white flex items-center justify-center shadow-sm hover:scale-110 hover:shadow-md transition-all`}
+        style={{ backgroundColor: WHATSAPP_GREEN }}
+        aria-label={`Chat with BloomCraft on WhatsApp (${siteConfig.whatsappFormatted})`}
+        title={`WhatsApp ${siteConfig.whatsappFormatted}`}
+      >
+        <WhatsAppLogo className={icon} />
+      </a>
+    </div>
+  );
+};

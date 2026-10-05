@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SocialLinks } from '../SocialIcons';
 import { 
   Heart, 
   Mail, 
@@ -377,6 +378,7 @@ export const CustomerLoginPage: React.FC<CustomerLoginPageProps> = ({
 
       {/* Footer */}
       <footer className="relative z-10 py-4 text-center text-xs text-[#A4838B] border-t border-[#F4A6B7]/20">
+        <SocialLinks size="sm" className="justify-center mb-2" />
         <p>© 2026 {siteConfig.name} • Handmade with 🌸 in Vadodara</p>
       </footer>
     </div>

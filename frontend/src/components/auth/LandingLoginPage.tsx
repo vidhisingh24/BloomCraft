@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SocialLinks } from '../SocialIcons';
 import { 
   Sparkles, 
   Mail, 
@@ -376,6 +377,7 @@ export const LandingLoginPage: React.FC<LandingLoginPageProps> = ({
 
       {/* Footer Branding */}
       <footer className="relative z-10 py-4 text-center text-xs text-[#A4838B] border-t border-[#F4A6B7]/20">
+        <SocialLinks size="sm" className="justify-center mb-2" />
         <p>© 2026 {siteConfig.name} • Vadodara Handmade Crochet Studio • Designed with 🌸</p>
       </footer>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SocialLinks } from '../SocialIcons';
 import { 
   Sparkles, 
   Mail, 
@@ -284,6 +285,7 @@ export const MakerLoginPage: React.FC<MakerLoginPageProps> = ({
 
       {/* Footer */}
       <footer className="relative z-10 py-4 text-center text-xs text-[#A4838B] border-t border-[#F4A6B7]/20">
+        <SocialLinks size="sm" className="justify-center mb-2" />
         <p>© 2026 {siteConfig.name} • Maker Studio Administration</p>
       </footer>
     </div>
