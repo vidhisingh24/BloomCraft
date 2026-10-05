@@ -133,6 +133,38 @@ npm run build
 
 ---
 
+## 🌍 Deploying
+
+The frontend is a static single-page app: `npm run build` produces `dist/`, which any static
+host serves. Until the backend API is live it runs on the built-in mock API
+(`VITE_USE_MOCK_API=true`, the default): orders, the cart and the maker dashboard live in each
+visitor's browser storage.
+
+### Vercel (recommended)
+1. Push the repo to GitHub, then **Add New → Project** on vercel.com and import it.
+2. **Root Directory: `frontend`** (Framework preset: Vite — `vercel.json` sets the rest).
+3. Optional: add any `VITE_*` variable from `.env.example` under **Settings → Environment
+   Variables** (WhatsApp number, UPI ID, …). The defaults in `src/config/site.config.ts` already
+   hold the real values. Redeploy after changing them — `VITE_*` values are baked in at build time.
+4. Deploy. Every push to the main branch redeploys; pull requests get preview links.
+
+### Netlify
+New site from Git → **Base directory `frontend`**; `netlify.toml` sets the build command,
+`dist`, the SPA fallback and the headers.
+
+### What the configs do
+- every unknown path serves `index.html` (single-page app), so refreshing never shows a 404;
+- hashed files in `/assets` are cached for a year, images for a week;
+- security headers (CSP, no framing, nosniff, referrer policy).
+
+### Before you share the link
+- `npm run check` must pass (type-check, lint, tests, build).
+- `npm run build && npm run preview` → open http://localhost:4173 on your phone (same Wi-Fi:
+  `npm run preview -- --host`) and click through shop → checkout → receipt.
+- UPI: the QR codes and UPI ID are real — every scan moves real money to that account.
+- Optimised originals of the large photos are kept in `frontend/.image-originals/` (not deployed,
+  git-ignored).
+
 ## 🔌 How to Connect the Backend
 
 When ready to connect a real backend (Node.js/Express, Django, Laravel, Supabase, or Firebase):
