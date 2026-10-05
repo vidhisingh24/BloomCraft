@@ -30,13 +30,13 @@ BloomCraft is a handmade crochet brand (keychains, bouquets, and bespoke amiguru
      - 🏫 **College Delivery**: Searchable Vadodara college directory (MSU, Parul, BVM, Navrachana, etc.), campus handover point, and instructions.
      - 📦 **Pan-India Parcel**: Offline auto pincode-to-city/state detection, full street address, and free delivery threshold logic.
    - **Step 3 — Payment Options**:
-     - Direct UPI: Official UPI ID copy, QR code, and mobile `upi://pay` deep link.
+     - Direct UPI: official Google Pay QR for ₹85 / ₹100 (generated QR for other totals), UPI ID copy, mobile `upi://pay` deep link and a required 12-digit UTR that the maker verifies.
      - Cash / Pay on Handover (COD).
    - **Step 4 — Final Review & Order Placement**: Itemized receipt preview, gift box options, discount coupons, and terms confirmation.
 
 5. **Order Confirmation, PDF Receipts & Tracking**:
    - Celebratory confirmation screen with animated confetti petals.
-   - Printable & downloadable A4 PDF receipt generator powered by `html2canvas` and `jsPDF` with dedicated `@media print` styling.
+   - Printable & downloadable A4 PDF receipt drawn with `jsPDF` (loaded only when needed), plus dedicated `@media print` styling.
    - Real-time order tracker (`/track`) and device order history (`/orders`).
    - One-click WhatsApp message builder with clean formatting and character limits.
 
