@@ -1,12 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import type { Order } from '../../types';
 import { siteConfig } from '../../config/site.config';
 import { formatPaise } from '../../utils/currency';
 import { formatISTDateTime } from '../../utils/date';
 import { useToast } from '../../context/ToastContext';
 import { trackEvent } from '../../utils/analytics';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { 
   Download, 
   Printer, 
@@ -23,40 +21,18 @@ interface ReceiptViewProps {
 }
 
 export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
-  const receiptRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const { showToast } = useToast();
 
   const handleDownloadPdf = async () => {
-    if (!receiptRef.current) return;
     setIsGeneratingPdf(true);
     trackEvent('receipt_download', { orderId: order.id });
-
     try {
-      showToast('Generating PDF 📄', 'Preparing your official keepsake receipt...', 'info');
-      
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#FAF8F5',
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Bloomcraft-Receipt-${order.id}.pdf`);
-
-      showToast('Receipt Downloaded! 🌸', `Bloomcraft-Receipt-${order.id}.pdf`, 'cart');
+      // jsPDF is only downloaded when someone actually asks for a receipt
+      const { downloadReceiptPdf } = await import('../../utils/receiptPdf');
+      const fileName = downloadReceiptPdf(order);
+      showToast('Receipt Downloaded! 🌸', fileName, 'cart');
     } catch (err) {
       console.error('PDF generation error:', err);
       showToast('PDF Export Error', 'Please use the Print option as an alternative', 'info');
@@ -90,7 +66,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       {/* Top Action Bar (Hidden in Print) */}
       <div className="no-print flex flex-wrap items-center justify-between gap-4 mb-8 bg-white p-4 rounded-2xl border border-[#F0E6E8] shadow-xs">
         {onBack && (
@@ -131,9 +107,8 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
 
       {/* Printable Receipt Card */}
       <div
-        ref={receiptRef}
         id="bloomcraft-receipt"
-        className="bg-[#FAF8F5] p-6 sm:p-10 rounded-3xl border border-[#EBD8DC] shadow-xs text-[#3D272A]"
+        className="bg-[#FAF8F5] p-4 sm:p-10 rounded-3xl border border-[#EBD8DC] shadow-xs text-[#3D272A]"
       >
         {/* Brand Header */}
         <div className="text-center pb-6 border-b border-[#EBD8DC]">
@@ -161,10 +136,10 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
             <p className="font-mono font-bold text-sm text-[#3D272A]">{order.id}</p>
             <p className="text-[#7A5B62] mt-0.5">Date: {formatISTDateTime(order.createdAt)} (IST)</p>
             <p className="text-[#7A5B62]">
-              Payment: <span className="font-semibold text-[#3D272A] uppercase">{order.payment.method}</span> ({order.payment.status.toUpperCase()})
+              Payment: <span className="font-semibold text-[#3D272A] uppercase">{order.payment.method === 'gpay' || order.payment.method === 'Google Pay (G.Pay)' ? 'Google Pay (G.Pay)' : order.payment.method}</span> ({order.payment.status.toUpperCase()})
             </p>
             {order.payment.upiTxnRef && (
-              <p className="text-[#7A5B62] font-mono text-[11px]">UTR: {order.payment.upiTxnRef}</p>
+              <p className="text-[#7A5B62] font-mono text-[11px]">Ref: {order.payment.upiTxnRef}</p>
             )}
           </div>
 
@@ -173,7 +148,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
               Billed & Delivered To
             </span>
             <p className="font-bold text-sm text-[#3D272A]">{order.customer.name}</p>
-            <p className="text-[#7A5B62]">+91 {order.customer.phone}</p>
+            <p className="text-[#7A5B62]">{order.customer.phone ? `+91 ${order.customer.phone}` : 'Direct Studio Handover'}</p>
             {order.customer.email && <p className="text-[#7A5B62]">{order.customer.email}</p>}
           </div>
         </div>
@@ -210,8 +185,8 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ order, onBack }) => {
         </div>
 
         {/* Line Items Table */}
-        <div className="py-4">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="py-4 overflow-x-auto">
+          <table className="w-full min-w-[420px] text-left text-xs border-collapse">
             <thead>
               <tr className="border-b-2 border-[#EBD8DC] text-[#7A5B62] uppercase tracking-wider font-bold">
                 <th className="py-2.5 pr-2">Handmade Item</th>
