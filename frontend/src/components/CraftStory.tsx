@@ -31,9 +31,9 @@ export const CraftStory: React.FC<CraftStoryProps> = ({ onSelectProduct, onNavig
     {
       name: "Ananya S.",
       city: "Bangalore",
-      review: "Ordered the crochet strawberry keychain for my tote bag. The milk cotton yarn is so soft and sturdy. Worth every rupee!",
+      review: "Ordered the baby pink double tulip keychain for my tote bag. The milk cotton yarn is so soft and sturdy. Worth every rupee!",
       rating: 5,
-      item: "Strawberry Keychain",
+      item: "Baby Pink Tulip Charm",
     },
     {
       name: "Karan D.",
