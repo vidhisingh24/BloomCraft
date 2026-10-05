@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.venv/
+var/
+secrets/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage*
+*.dump
+.hypothesis/
