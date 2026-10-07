@@ -1,191 +1,82 @@
-# 🌸 BloomCraft — Frontend Architecture & Build Specification (v2)
+# 🌸 BloomCraft — Frontend
 
-BloomCraft is a handmade crochet brand (keychains, bouquets, and bespoke amigurumi creations) handcrafted with 100% premium milk cotton yarn in **Vadodara, Gujarat**.
+React 19 + TypeScript + Vite + Tailwind CSS 4 storefront and Maker Studio, backed by Supabase
+(database, accounts, realtime). Setup of the Supabase project: [`../docs/SUPABASE_SETUP.md`](../docs/SUPABASE_SETUP.md).
 
----
+## How it works
 
-## 🌟 Key Architecture & Capabilities
+- **Catalogue** — `products` and `coupons` tables, loaded once per visit (`CatalogContext`).
+- **Checkout** — the browser sends only product IDs, quantities, delivery details and the UPI reference
+  to the `place_order` database function. The database recomputes every price, coupon and delivery
+  charge and refuses the order if the total differs from what the customer saw, or if a UPI reference
+  was already used.
+- **Accounts** — Supabase Auth (Google or e-mail + password). The
+  session is kept on the device and refreshed automatically, so customers stay signed in.
+- **Maker Studio** — only the e-mail listed in `admin_emails` can open it; row-level security enforces
+  this in the database. New orders and custom requests arrive live (Supabase Realtime) with a chime and
+  an optional system notification; an Edge Function can also alert by Telegram / WhatsApp / e-mail.
+- **Guests** can order without an account and track an order with its number + phone number.
+- Cart, wishlist and the checkout draft stay in the browser (per-device conveniences).
 
-1. **Preserved Visual & Animation Assets**:
-   - The opening brand intro splash animation (`IntroSplash.tsx` and `BloomcraftIntro/`) is preserved with exact timing, visual sequence, and trigger behavior.
-   - All high-resolution original handmade crochet product images in `/public/images/keychains/` are used directly in the catalog without any placeholder replacements.
-   - Brand aesthetic (Cream `#FAF8F5`, Rose `#FFE3E8`, Blush `#FFF0F3`, Espresso `#3D272A`, Rosewood `#D96B82`) and typography (Playfair Display, Sacramento) preserved throughout.
+## Folder structure
 
-2. **Mobile-First Responsive Experience**:
-   - Tested across 360px, 390px, 430px, 768px, 1024px, and 1440px viewport breakpoints.
-   - Fixed sticky bottom action bar on mobile viewports for effortless single-hand thumb navigation.
-   - Minimum 44×44px touch targets with safe-area insets (`env(safe-area-inset-*)`).
-   - 2-column mobile product grid, responsive bottom sheets, and slide-in navigation drawers.
-
-3. **Backend-Ready Service Layer (`src/services/`)**:
-   - UI components interact strictly with `productService`, `orderService`, and `customRequestService`.
-   - All monetary values are strictly represented as **integers in paise** (e.g. ₹120 = `12000` paise) across types and calculators to prevent floating-point rounding errors.
-   - Versioned typed `localStorage` wrapper (`bloomcraft:v1:*`) with cross-tab event listeners and JSON schema validation.
-   - Complete API contract documentation available in [`src/services/API_CONTRACT.md`](./src/services/API_CONTRACT.md).
-
-4. **Multi-Step Checkout Flow (`/checkout`)**:
-   - **Step 1 — Customer Information**: Full name, 10-digit Indian phone (with auto +91 normalization and validation), and optional email.
-   - **Step 2 — Delivery Method**:
-     - 📍 **Vadodara Local**: Selectable local area chips (Alkapuri, Fatehgunj, Akota, etc.), minimum handover date based on handmade lead time, and time slots.
-     - 🏫 **College Delivery**: Searchable Vadodara college directory (MSU, Parul, BVM, Navrachana, etc.), campus handover point, and instructions.
-     - 📦 **Pan-India Parcel**: Offline auto pincode-to-city/state detection, full street address, and free delivery threshold logic.
-   - **Step 3 — Payment Options**:
-     - Direct UPI: official Google Pay QR for ₹85 / ₹100 (generated QR for other totals), UPI ID copy, mobile `upi://pay` deep link and a required 12-digit UTR that the maker verifies.
-     - Cash / Pay on Handover (COD).
-   - **Step 4 — Final Review & Order Placement**: Itemized receipt preview, gift box options, discount coupons, and terms confirmation.
-
-5. **Order Confirmation, PDF Receipts & Tracking**:
-   - Celebratory confirmation screen with animated confetti petals.
-   - Printable & downloadable A4 PDF receipt drawn with `jsPDF` (loaded only when needed), plus dedicated `@media print` styling.
-   - Real-time order tracker (`/track`) and device order history (`/orders`).
-   - One-click WhatsApp message builder with clean formatting and character limits.
-
-6. **Maker Dashboard (`/maker` or Tab)**:
-   - Overview metrics, Recent Orders table, Custom Requests management, Product Catalog pricing & stock toggles, and dedicated Delivery Tab.
-   - Client-side CSV export of filtered orders for offline fulfillment.
-   - Status updates made in the dashboard immediately sync with the customer-facing order tracker via shared storage.
-
----
-
-## 📁 Directory Structure
-
-```
+```text
 src/
-├── config/             # Central site, delivery, and payment configurations
-│   ├── site.config.ts
-│   ├── delivery.config.ts
-│   └── payment.config.ts
-├── types/              # TypeScript interfaces (Product, CartItem, Order, etc.)
-│   └── index.ts
-├── data/mock/          # Realistic mock data and offline datasets
-│   ├── products.ts
-│   ├── orders.ts
-│   ├── customRequests.ts
-│   ├── colleges.ts
-│   └── pincodes.ts
-├── services/           # Service layer with simulated network latency
-│   ├── productService.ts
-│   ├── orderService.ts
-│   ├── customRequestService.ts
-│   ├── storage.ts
-│   └── API_CONTRACT.md # Full REST endpoint specification for backend integration
-├── store/ / context/   # React Context state management
-│   ├── CartContext.tsx
-│   ├── WishlistContext.tsx
-│   └── ToastContext.tsx
-├── utils/              # Pure utilities with 100% Vitest unit test coverage
-│   ├── currency.ts     # Integer paise formatters
-│   ├── pricing.ts      # Tax, discount, gift wrap & delivery calculations
-│   ├── ids.ts          # BC-YYYY-XXXXX & CUSTOM-BC-XXX sequential generators
-│   ├── whatsapp.ts     # WhatsApp URL and message builders
-│   ├── date.ts         # IST datetime and lead-time date helpers
-│   ├── validation.ts   # Indian phone, email, and pincode validators
-│   └── analytics.ts    # GA4 / Meta Pixel event dispatchers
-├── components/         # Reusable modular UI components
-│   ├── checkout/       # Multi-step checkout wizard
-│   ├── order/          # Order tracker, confirmation & history
-│   ├── receipt/        # PDF & printable receipt view
-│   ├── Dashboard/      # Maker management studio
-│   ├── policy/         # Legal & policy documentation pages
-│   ├── KeychainsPage.tsx
-│   ├── BouquetsPage.tsx
-│   ├── CustomizePage.tsx
-│   ├── CartDrawer.tsx
-│   ├── WishlistDrawer.tsx
-│   ├── ProductModal.tsx
-│   ├── Navbar.tsx
-│   └── Footer.tsx
-└── styles/
-    └── index.css       # Tailwind CSS, custom animations, print stylesheet
+├── app/App.tsx            # providers, page switching, auth gate
+├── features/              # one folder per area of the site
+│   ├── auth/              # login pages, AuthForm, password reset
+│   ├── shop/              # home, keychains, bouquets, product modal
+│   ├── custom/            # custom-order page (saved to the studio + WhatsApp)
+│   ├── cart/  wishlist/
+│   ├── checkout/          # 4-step checkout, UPI QR + UTR panel
+│   ├── orders/            # confirmation, tracking, history, receipt + PDF
+│   ├── dashboard/         # Maker Studio (orders, payments, requests, products, delivery)
+│   ├── intro/  policy/
+├── components/            # shared UI: layout (navbar, footer), social icons, status banners
+├── context/               # Auth, Catalog, Cart, Wishlist, Toast providers
+├── services/              # Supabase calls: products, orders, custom requests; local storage helper
+├── lib/supabase.ts        # Supabase client + friendly error messages
+├── config/                # site details, delivery options, gift-wrap price
+├── data/                  # static reference data: colleges, PIN codes, custom gallery
+├── types/  utils/
 ```
 
----
+## Scripts
 
-## 🚀 Getting Started & Scripts
+Requires **Node.js 20.19+** (22 recommended).
 
-### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or pnpm
+| Command | What it does |
+|---|---|
+| `npm install` | install dependencies |
+| `npm run dev` | development server on http://localhost:5173 |
+| `npm test` | unit tests (pricing, validation, WhatsApp messages, receipt PDF, UPI) |
+| `npm run check` | type-check, lint, tests and production build — run before every deploy |
+| `npm run preview` | serve the production build on http://localhost:4173 |
 
-### Installation
-```bash
-# Install project dependencies
-npm install
-```
-
-### Development Server
-```bash
-# Start Vite development server
-npm run dev
-```
-
-### Running Unit Tests
-```bash
-# Run Vitest unit tests (pricing, ID generation, validation, WhatsApp messages)
-npm test
-```
-
-### Production Build
-```bash
-# Type-check and build optimized production bundle
-npm run build
-```
-
----
+Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+Without them the site shows a short setup notice instead of the shop.
 
 ## 🌍 Deploying
 
-The frontend is a static single-page app: `npm run build` produces `dist/`, which any static
-host serves. Until the backend API is live it runs on the built-in mock API
-(`VITE_USE_MOCK_API=true`, the default): orders, the cart and the maker dashboard live in each
-visitor's browser storage.
-
 ### Vercel (recommended)
-1. Push the repo to GitHub, then **Add New → Project** on vercel.com and import it.
+1. **Add New → Project** on vercel.com and import the GitHub repository.
 2. **Root Directory: `frontend`** (Framework preset: Vite — `vercel.json` sets the rest).
-3. Optional: add any `VITE_*` variable from `.env.example` under **Settings → Environment
-   Variables** (WhatsApp number, UPI ID, …). The defaults in `src/config/site.config.ts` already
-   hold the real values. Redeploy after changing them — `VITE_*` values are baked in at build time.
-4. Deploy. Every push to the main branch redeploys; pull requests get preview links.
+3. **Settings → Environment Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+   `VITE_ENABLE_GOOGLE_LOGIN` (and any optional `VITE_*` from
+   `.env.example`). `VITE_*` values are baked in at build time — redeploy after changing them.
+4. In Supabase → Authentication → URL Configuration, add the Vercel address as Site URL / Redirect URL.
 
 ### Netlify
-New site from Git → **Base directory `frontend`**; `netlify.toml` sets the build command,
-`dist`, the SPA fallback and the headers.
+New site from Git → **Base directory `frontend`**; `netlify.toml` sets the build, the SPA fallback and the
+headers. Add the same environment variables.
 
 ### What the configs do
 - every unknown path serves `index.html` (single-page app), so refreshing never shows a 404;
 - hashed files in `/assets` are cached for a year, images for a week;
-- security headers (CSP, no framing, nosniff, referrer policy).
+- security headers (CSP allowing Supabase over HTTPS/WebSocket, no framing, nosniff, referrer policy).
 
 ### Before you share the link
-- `npm run check` must pass (type-check, lint, tests, build).
-- `npm run build && npm run preview` → open http://localhost:4173 on your phone (same Wi-Fi:
-  `npm run preview -- --host`) and click through shop → checkout → receipt.
+- `npm run check` passes.
+- Place a test order (Pay on Handover) and check it appears in the Maker Studio and in your alerts; then
+  set it to *Cancelled*.
 - UPI: the QR codes and UPI ID are real — every scan moves real money to that account.
-- Optimised originals of the large photos are kept in `frontend/.image-originals/` (not deployed,
-  git-ignored).
-
-## 🔌 How to Connect the Backend
-
-When ready to connect a real backend (Node.js/Express, Django, Laravel, Supabase, or Firebase):
-
-1. **Configure Environment Variables**:
-   Update `.env` (refer to `.env.example`):
-   ```env
-   VITE_USE_MOCK_API=false
-   VITE_API_BASE_URL=https://api.bloomcraft.in/v1
-   ```
-
-2. **Implement API Endpoints**:
-   Follow the exact contract defined in [`src/services/API_CONTRACT.md`](./src/services/API_CONTRACT.md):
-   - `GET /products` & `GET /products/:slug`
-   - `POST /orders` & `GET /orders/:id` & `PATCH /orders/:id/status`
-   - `POST /custom-requests` & `GET /custom-requests`
-
-3. **Enable Real Network Requests**:
-   Uncomment the `fetch(`${siteConfig.apiBaseUrl}/...`)` blocks in:
-   - `src/services/productService.ts`
-   - `src/services/orderService.ts`
-   - `src/services/customRequestService.ts`
-
-No UI components or state hooks need to be refactored!
