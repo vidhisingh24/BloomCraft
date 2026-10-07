@@ -14,10 +14,15 @@ export type UserRole = 'customer' | 'maker';
 export interface AuthUser {
   id: string;
   email?: string;
+  /** 10-digit mobile number: verified by SMS when phoneVerified, otherwise as typed by the customer. */
   phone?: string;
+  phoneVerified: boolean;
   name: string;
   role: UserRole;
   avatar: string;
+  /** How the account signs in; Google-only accounts have no password to change. */
+  providers: string[];
+  createdAt: string;
 }
 
 export interface SignUpResult {
@@ -39,6 +44,13 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
   resendConfirmation: (email: string) => Promise<void>;
   updateName: (name: string) => Promise<void>;
+  /** Saves the mobile number without SMS verification (used when phone OTP is switched off). */
+  savePhone: (phone10: string) => Promise<void>;
+  /** Sends an SMS code to verify a mobile number for this account. */
+  startPhoneVerification: (phone10: string) => Promise<void>;
+  confirmPhoneVerification: (phone10: string, code: string) => Promise<void>;
+  /** Signs out on every device where this account is signed in. */
+  logoutEverywhere: () => Promise<void>;
   /** True after opening a password-reset link: the app should ask for a new password. */
   passwordRecovery: boolean;
   updatePassword: (password: string) => Promise<void>;
@@ -48,6 +60,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const redirectTo = () => `${window.location.origin}${window.location.pathname}`;
+const toE164 = (phone10: string) => `+91${phone10.replace(/\D/g, '').slice(-10)}`;
+const tenDigits = (phone?: string | null) => (phone ? phone.replace(/\D/g, '').slice(-10) : undefined);
 
 function displayName(u: User, profileName?: string | null): string {
   const meta = u.user_metadata ?? {};
@@ -66,13 +80,17 @@ async function loadUser(u: User): Promise<AuthUser> {
     supabase.from('profiles').select('full_name').eq('id', u.id).maybeSingle(),
   ]);
   const role: UserRole = admin === true ? 'maker' : 'customer';
+  const phoneVerified = Boolean(u.phone && u.phone_confirmed_at);
   return {
     id: u.id,
     email: u.email || undefined,
-    phone: u.phone ? u.phone.replace(/^91/, '') : undefined,
+    phone: phoneVerified ? tenDigits(u.phone) : tenDigits(u.user_metadata?.phone as string | undefined),
+    phoneVerified,
     name: displayName(u, profile?.full_name),
     role,
     avatar: role === 'maker' ? '✨' : '🌸',
+    providers: (u.app_metadata?.providers as string[] | undefined) ?? [u.app_metadata?.provider ?? 'email'],
+    createdAt: u.created_at,
   };
 }
 
@@ -200,6 +218,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPasswordRecovery(false);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const { data, error } = await getSupabase().auth.getUser();
+    if (error) throw error;
+    if (data.user) setUser(await loadUser(data.user));
+  }, []);
+
+  const savePhone = useCallback(
+    async (phone10: string) => {
+      const { error } = await getSupabase().auth.updateUser({ data: { phone: tenDigits(phone10) } });
+      if (error) throw error;
+      await refreshUser();
+    },
+    [refreshUser]
+  );
+
+  const startPhoneVerification = useCallback(async (phone10: string) => {
+    const { error } = await getSupabase().auth.updateUser({ phone: toE164(phone10) });
+    if (error) throw error;
+  }, []);
+
+  const confirmPhoneVerification = useCallback(
+    async (phone10: string, code: string) => {
+      const { error } = await getSupabase().auth.verifyOtp({
+        phone: toE164(phone10),
+        token: code.trim(),
+        type: 'phone_change',
+      });
+      if (error) throw error;
+      await refreshUser();
+    },
+    [refreshUser]
+  );
+
+  const logoutEverywhere = useCallback(async () => {
+    setUser(null);
+    storage.remove(STORAGE_KEYS.CHECKOUT_DRAFT);
+    await getSupabase().auth.signOut({ scope: 'global' });
+  }, []);
+
   const logout = useCallback(async () => {
     setUser(null);
     // Saved checkout details (name, phone, address) should not outlive the session on shared devices.
@@ -220,6 +277,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendPasswordReset,
       resendConfirmation,
       updateName,
+      savePhone,
+      startPhoneVerification,
+      confirmPhoneVerification,
+      logoutEverywhere,
       passwordRecovery,
       updatePassword,
       logout,
@@ -233,6 +294,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendPasswordReset,
       resendConfirmation,
       updateName,
+      savePhone,
+      startPhoneVerification,
+      confirmPhoneVerification,
+      logoutEverywhere,
       passwordRecovery,
       updatePassword,
       logout,

@@ -22,7 +22,7 @@ export interface SiteConfig {
   upiPayeeName: string;
   founderName: string;
   /** Show sign-in buttons only for providers switched on in Supabase → Authentication. */
-  auth: { google: boolean };
+  auth: { google: boolean; phoneOtp: boolean };
 }
 
 export const siteConfig: SiteConfig = {
@@ -48,5 +48,7 @@ export const siteConfig: SiteConfig = {
   founderName: "Vidhi Singh",
   auth: {
     google: env.VITE_ENABLE_GOOGLE_LOGIN === "true",
+    // SMS codes need an SMS provider in Supabase → Authentication → Providers → Phone.
+    phoneOtp: env.VITE_ENABLE_PHONE_OTP === "true",
   },
 };
