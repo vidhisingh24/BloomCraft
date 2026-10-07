@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Product } from '../types';
 import { storage, STORAGE_KEYS } from '../services/storage';
-import { MOCK_PRODUCTS } from '../data/mock/products';
+import { useCatalog } from './CatalogContext';
 import { useToast } from './ToastContext';
 
 interface WishlistContextType {
@@ -65,7 +65,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [wishlistIds]
   );
 
-  const wishlistProducts = MOCK_PRODUCTS.filter((p) => wishlistIds.includes(p.id));
+  const { products } = useCatalog();
+  const wishlistProducts = products.filter((p) => wishlistIds.includes(p.id));
 
   return (
     <WishlistContext.Provider

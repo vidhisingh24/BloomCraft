@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { CartItem, Product, Coupon, OrderPricing, DeliveryMethod } from '../types';
 import { storage, STORAGE_KEYS } from '../services/storage';
 import { calculatePricing } from '../utils/pricing';
-import { AVAILABLE_COUPONS } from '../config/payment.config';
+import { useCatalog } from './CatalogContext';
+import { productService } from '../services/productService';
+import { friendlyError } from '../lib/supabase';
 import { DELIVERY_METHODS } from '../config/delivery.config';
 import { useToast } from './ToastContext';
 import { formatPaise } from '../utils/currency';
@@ -16,7 +18,7 @@ interface CartContextType {
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   appliedCoupon: Coupon | null;
-  applyCoupon: (code: string) => { success: boolean; message: string };
+  applyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
   removeCoupon: () => void;
   giftWrapRequested: boolean;
   setGiftWrapRequested: (requested: boolean) => void;
@@ -43,6 +45,33 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeDeliveryMethod, setActiveDeliveryMethod] = useState<DeliveryMethod>('vadodara_local');
 
   const { showToast } = useToast();
+  const { products } = useCatalog();
+
+  // Keep saved cart items in step with the live catalogue: current prices, and drop anything
+  // the maker has removed or marked out of stock.
+  useEffect(() => {
+    if (products.length === 0) return;
+    const byId = new Map(products.map((p) => [p.id, p]));
+    setCart((prev) => {
+      let changed = false;
+      const next: CartItem[] = [];
+      for (const item of prev) {
+        const live = byId.get(item.productId);
+        if (!live || live.availability === 'out_of_stock') {
+          changed = true;
+          continue;
+        }
+        const quantity = Math.min(item.quantity, live.maxQtyPerOrder);
+        if (live.price !== item.priceAtAdd || quantity !== item.quantity || live !== item.product) {
+          changed = true;
+          next.push({ ...item, product: live, priceAtAdd: live.price, quantity });
+        } else {
+          next.push(item);
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [products]);
 
   // Sync to versioned storage
   useEffect(() => {
@@ -61,6 +90,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = useCallback(
     (product: Product, quantity: number = 1, color?: string, customNote?: string) => {
+      if (product.availability === 'out_of_stock') {
+        showToast('Sold out for now', `${product.name} is out of stock. Message us on WhatsApp to pre-order.`, 'info');
+        return;
+      }
       const selectedColor =
         color || (product.colors && product.colors.length > 0 ? product.colors[0].name : undefined);
       const cleanNote = customNote?.trim() ? customNote.trim().slice(0, 30) : undefined;
@@ -144,12 +177,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const applyCoupon = useCallback(
-    (code: string): { success: boolean; message: string } => {
-      const cleanCode = code.trim().toUpperCase();
-      const match = AVAILABLE_COUPONS.find((c) => c.code.toUpperCase() === cleanCode);
+    async (code: string): Promise<{ success: boolean; message: string }> => {
+      let match: Coupon | null;
+      try {
+        match = await productService.checkCoupon(code);
+      } catch (err) {
+        return { success: false, message: friendlyError(err, 'Could not check the code. Please try again.') };
+      }
 
       if (!match) {
-        return { success: false, message: 'Invalid coupon code. Try BLOOM10 or WELCOME50.' };
+        return { success: false, message: 'This coupon code is not valid.' };
       }
 
       const currentSubtotal = cart.reduce(
