@@ -25,6 +25,7 @@ out/
 !.env.example
 *.env
 *.env.*
+!.env.example
 *.pem
 *.key
 *.cert
