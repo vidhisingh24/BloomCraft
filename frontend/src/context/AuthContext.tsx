@@ -37,6 +37,7 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<AuthUser>;
   signUpWithPassword: (name: string, email: string, password: string) => Promise<SignUpResult>;
   sendPasswordReset: (email: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   updateName: (name: string) => Promise<void>;
   /** True after opening a password-reset link: the app should ask for a new password. */
   passwordRecovery: boolean;
@@ -153,6 +154,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: { data: { full_name: name.trim() }, emailRedirectTo: redirectTo() },
       });
       if (error) throw error;
+      // Supabase answers a sign-up for an e-mail that already has an account with an empty user
+      // (so strangers cannot probe which e-mails exist). Tell the real owner what to do instead.
+      if (data.user && data.user.identities?.length === 0) {
+        throw Object.assign(new Error('An account with this e-mail already exists.'), { code: 'user_already_exists' });
+      }
       if (data.session) {
         return { needsConfirmation: false, user: await finish(data.user) };
       }
@@ -160,6 +166,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     [finish]
   );
+
+  const resendConfirmation = useCallback(async (email: string) => {
+    const { error } = await getSupabase().auth.resend({
+      type: 'signup',
+      email: email.trim().toLowerCase(),
+      options: { emailRedirectTo: redirectTo() },
+    });
+    if (error) throw error;
+  }, []);
 
   const sendPasswordReset = useCallback(async (email: string) => {
     const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
@@ -203,6 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithPassword,
       signUpWithPassword,
       sendPasswordReset,
+      resendConfirmation,
       updateName,
       passwordRecovery,
       updatePassword,
@@ -215,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithPassword,
       signUpWithPassword,
       sendPasswordReset,
+      resendConfirmation,
       updateName,
       passwordRecovery,
       updatePassword,

@@ -48,15 +48,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ audience, onSuccess }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [errorCode, setErrorCode] = useState('');
 
   const run = async (task: () => Promise<void>) => {
     setBusy(true);
     setError('');
+    setErrorCode('');
     setNotice('');
     try {
       await task();
     } catch (err) {
       setError(friendlyError(err));
+      setErrorCode((err as { code?: string })?.code ?? '');
     } finally {
       setBusy(false);
     }
@@ -103,7 +106,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ audience, onSuccess }) => {
   const switchMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
     setError('');
+    setErrorCode('');
     setNotice('');
+  };
+
+  const handleResend = () => {
+    void run(async () => {
+      await auth.resendConfirmation(email);
+      setNotice(`We sent a new confirmation link to ${email.trim()}. Open it, then sign in here.`);
+    });
   };
 
   return (
@@ -175,9 +186,26 @@ export const AuthForm: React.FC<AuthFormProps> = ({ audience, onSuccess }) => {
         </div>
 
         {error && (
-          <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2" role="alert">
-            {error}
-          </p>
+          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 space-y-1.5" role="alert">
+            <p>{error}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {errorCode === 'invalid_credentials' && !isMakerForm && (
+                <button type="button" onClick={switchMode} className="font-bold text-[#C0536A] hover:underline">
+                  Create an account →
+                </button>
+              )}
+              {(errorCode === 'invalid_credentials' || errorCode === 'user_already_exists' || errorCode === 'email_exists') && (
+                <button type="button" onClick={handleForgot} className="font-bold text-[#C0536A] hover:underline">
+                  Send me a password reset link →
+                </button>
+              )}
+              {errorCode === 'email_not_confirmed' && (
+                <button type="button" onClick={handleResend} className="font-bold text-[#C0536A] hover:underline">
+                  Resend confirmation e-mail →
+                </button>
+              )}
+            </div>
+          </div>
         )}
         {notice && (
           <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2" role="status">

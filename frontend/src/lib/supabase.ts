@@ -55,6 +55,21 @@ export function friendlyError(error: unknown, fallback = 'Something went wrong. 
       ? 'Too many e-mails were sent in a short time. Please wait a few minutes, or sign in with your password.'
       : 'Too many attempts. Please wait a minute and try again.';
   }
+  switch (e.code) {
+    case 'invalid_credentials':
+      return 'Wrong e-mail or password. New here? Tap "Create an account". Forgot it? Tap "Forgot password?".';
+    case 'email_not_confirmed':
+      return 'Please confirm your e-mail first: open the link we sent you (check Spam too).';
+    case 'user_already_exists':
+    case 'email_exists':
+      return 'An account with this e-mail already exists. Sign in instead, or tap "Forgot password?".';
+    case 'weak_password':
+      return 'Please choose a stronger password (at least 8 characters with letters and numbers).';
+    case 'signup_disabled':
+      return 'New accounts are switched off right now. Please message us on WhatsApp.';
+    case 'over_email_send_rate_limit':
+      return 'Too many e-mails were sent in a short time. Please wait a few minutes and try again.';
+  }
   // Messages raised on purpose by our database functions (errcode P0001) and Supabase Auth
   // errors (wrong password, expired code, …) are written for people.
   if (e.message && (e.code === 'P0001' || e.name?.startsWith('Auth'))) return e.message;
