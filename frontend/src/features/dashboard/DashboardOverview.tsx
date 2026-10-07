@@ -13,6 +13,7 @@ import type { Order, CustomRequest, OrderStatus } from '../../types';
 import { formatPaise } from '../../utils/currency';
 import { formatISTDate } from '../../utils/date';
 import { paymentMethodLabel } from '../../utils/orderLabels';
+import { EARLIER_SALES_CORRECTION } from '../../config/sales.config';
 
 interface DashboardOverviewProps {
   orders: Order[];
@@ -35,9 +36,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const completedOrdersCount = orders.filter((o) => o.status === 'delivered').length;
 
   const liveOrders = useMemo(() => orders.filter((o) => o.status !== 'cancelled'), [orders]);
-  const receivedPaise = liveOrders
-    .filter((o) => o.payment.status === 'paid')
-    .reduce((sum, o) => sum + o.pricing.total, 0);
+  const receivedPaise =
+    liveOrders.filter((o) => o.payment.status === 'paid').reduce((sum, o) => sum + o.pricing.total, 0) +
+    EARLIER_SALES_CORRECTION.totalPaise;
   const awaitingCheck = liveOrders.filter((o) => o.payment.status === 'awaiting_verification');
   const awaitingCheckPaise = awaitingCheck.reduce((sum, o) => sum + o.pricing.total, 0);
   const unpaidHandoverPaise = liveOrders
@@ -67,6 +68,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         summaryMap.set(key, existing);
       });
     });
+
+    for (const [name, extra] of Object.entries(EARLIER_SALES_CORRECTION.byProductPaise)) {
+      const entry = summaryMap.get(name);
+      if (entry) entry.totalPaise += extra;
+    }
 
     return Array.from(summaryMap.values()).sort((a, b) => b.totalPaise - a.totalPaise);
   }, [liveOrders]);

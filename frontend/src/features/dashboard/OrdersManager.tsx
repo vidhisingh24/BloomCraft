@@ -15,6 +15,7 @@ import { formatPaise } from '../../utils/currency';
 import { formatISTDate } from '../../utils/date';
 import { useToast } from '../../context/ToastContext';
 import { paymentMethodLabel } from '../../utils/orderLabels';
+import { EARLIER_SALES_CORRECTION } from '../../config/sales.config';
 
 interface OrdersManagerProps {
   orders: Order[];
@@ -23,7 +24,7 @@ interface OrdersManagerProps {
   products: Product[];
   /** Resolves true when the order was saved. */
   onAddManualOrder: (input: ManualOrderInput) => Promise<boolean>;
-  onDeleteManualOrder: (orderId: string) => void;
+  onDeleteOrder: (orderId: string) => void;
   /** Orders with a save in progress: their controls are disabled until it finishes. */
   savingIds?: ReadonlySet<string>;
 }
@@ -36,7 +37,7 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
   onUpdatePaymentStatus,
   products,
   onAddManualOrder,
-  onDeleteManualOrder,
+  onDeleteOrder,
   savingIds,
 }) => {
   const [showManualForm, setShowManualForm] = useState(false);
@@ -137,7 +138,12 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
     showToast('CSV Exported 📊', `${filteredOrders.length} orders downloaded`, 'cart');
   };
 
-  const totalFilteredRevenuePaise = filteredOrders.reduce((acc, o) => acc + o.pricing.total, 0);
+  // Same rule as the Overview: cancelled orders are not sales. The earlier-sales correction
+  // applies to the full list only (not to a filtered view).
+  const showingAll = activeFilter === 'all' && selectedMethod === 'all' && !searchQuery.trim();
+  const totalFilteredRevenuePaise =
+    filteredOrders.filter((o) => o.status !== 'cancelled').reduce((acc, o) => acc + o.pricing.total, 0) +
+    (showingAll ? EARLIER_SALES_CORRECTION.totalPaise : 0);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -431,20 +437,18 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
             )}
 
             <div className="pt-3 flex flex-wrap gap-2">
-              {(viewingOrder.source ?? 'website') !== 'website' && (
-                <button
-                  disabled={savingIds?.has(viewingOrder.id)}
-                  onClick={() => {
-                    if (window.confirm(`Delete ${viewingOrder.id} (${viewingOrder.customer.name})? This cannot be undone.`)) {
-                      onDeleteManualOrder(viewingOrder.id);
-                      setViewingOrder(null);
-                    }
-                  }}
-                  className="px-4 py-2.5 rounded-full border border-red-200 text-xs font-bold text-red-700 hover:bg-red-50 flex items-center gap-1.5"
-                >
-                  <Trash2 className="w-4 h-4" /> Delete
-                </button>
-              )}
+              <button
+                disabled={savingIds?.has(viewingOrder.id)}
+                onClick={() => {
+                  if (window.confirm(`Delete order ${viewingOrder.id} (${viewingOrder.customer.name}, ${formatPaise(viewingOrder.pricing.total)})? This cannot be undone.`)) {
+                    onDeleteOrder(viewingOrder.id);
+                    setViewingOrder(null);
+                  }
+                }}
+                className="px-4 py-2.5 rounded-full border border-red-200 text-xs font-bold text-red-700 hover:bg-red-50 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" /> Delete order
+              </button>
               <button
                 onClick={() => handleWhatsAppCustomer(viewingOrder)}
                 className="flex-1 py-2.5 rounded-full bg-[#25D366] text-white text-xs font-bold hover:bg-[#20bd5a] flex items-center justify-center gap-1.5 cursor-pointer"
@@ -489,7 +493,7 @@ const SOURCE_LABEL: Record<NonNullable<Order['source']>, string> = {
 };
 
 const SourceBadge: React.FC<{ source?: Order['source'] }> = ({ source = 'website' }) =>
-  source === 'website' ? null : (
+  source === 'website' || source === 'other' ? null : (
     <span className="mt-1 inline-block px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EBD8DC] text-[10px] font-semibold text-[#5C3E45]">
       {SOURCE_LABEL[source]}
     </span>

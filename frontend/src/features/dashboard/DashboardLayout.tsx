@@ -220,10 +220,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
     }
   };
 
-  const handleDeleteManualOrder = (orderId: string) =>
+  const handleDeleteOrder = (orderId: string) =>
     withSaving(orderId, async () => {
       try {
-        await orderService.deleteManual(orderId);
+        await orderService.delete(orderId);
         setOrders((prev) => prev.filter((o) => o.id !== orderId));
         showToast('Order deleted', orderId, 'info');
       } catch (err) {
@@ -431,7 +431,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onUpdatePaymentStatus={handleUpdatePaymentStatus}
             onAddManualOrder={handleAddManualOrder}
-            onDeleteManualOrder={handleDeleteManualOrder}
+            onDeleteOrder={handleDeleteOrder}
             savingIds={savingIds}
           />
         )}

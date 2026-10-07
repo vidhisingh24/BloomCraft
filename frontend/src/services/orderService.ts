@@ -135,9 +135,9 @@ export const orderService = {
     return fromRpc(data);
   },
 
-  /** Maker: delete an order that was recorded by hand (website orders cannot be deleted). */
-  async deleteManual(id: string): Promise<void> {
-    const { error } = await getSupabase().rpc('admin_delete_manual_order', { p_order_id: id });
+  /** Maker: permanently delete an order (test orders, duplicates, mistakes). */
+  async delete(id: string): Promise<void> {
+    const { error } = await getSupabase().rpc('admin_delete_order', { p_order_id: id });
     if (error) throw error;
   },
 
