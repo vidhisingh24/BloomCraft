@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Menu, X, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react';
+import { ShoppingBag, Heart, Menu, X, Sparkles, LogOut, LayoutDashboard, User, Settings } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -166,6 +166,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                   <span>{user?.name ? `${user.name.split(' ')[0]}'s Studio` : 'Maker Studio'}</span>
                 </button>
                 <button
+                  onClick={() => handleNavClick('settings')}
+                  title="Account settings"
+                  className="p-2 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+                <button
                   onClick={() => void handleLogout()}
                   title="Sign Out"
                   className="p-2 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors"
@@ -250,6 +257,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                 className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#D96B82] bg-[#FFE3E8]/50 hover:bg-[#FFE3E8] flex items-center justify-between"
               >
                 <span>Maker Studio Dashboard 🌸</span>
+              </button>
+              <button
+                onClick={() => handleNavClick('settings')}
+                className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#5C3E45] hover:bg-[#FFF0F3] flex items-center justify-between"
+              >
+                <span>Account Settings (password)</span>
               </button>
               <button
                 onClick={() => void handleLogout()}
