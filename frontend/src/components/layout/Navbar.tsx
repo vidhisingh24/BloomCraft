@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Heart, Menu, X, Sparkles, LogOut, LayoutDashboard, User } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
-import { useAuth } from '../context/AuthContext';
-import { siteConfig } from '../config/site.config';
+import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import { siteConfig } from '../../config/site.config';
 
 interface NavbarProps {
   activeTab: string;
@@ -15,8 +16,17 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenLogin }) => {
   const { totalItems, setIsCartOpen } = useCart();
   const { totalWishlist } = useWishlist();
-  const { user, isMaker, isCustomer, logout } = useAuth();
+  const { user, isMaker, isCustomer, logout, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileMenuOpen(false);
+    setActiveTab('home');
+    showToast('Signed out', 'See you soon 🌸', 'info');
+  };
 
   const navLinks: { id: string; label: string; sectionId?: string }[] = [
     { id: 'home', label: 'Home', sectionId: 'hero' },
@@ -144,7 +154,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
             </button>
 
             {/* Role-based User State / Maker Studio / Login */}
-            {isMaker ? (
+            {authLoading ? (
+              <span className="hidden lg:block w-24 h-8 rounded-full bg-[#FFE3E8]/60 animate-pulse" aria-hidden="true" />
+            ) : isMaker ? (
               <div className="hidden lg:flex items-center gap-2">
                 <button
                   onClick={() => handleNavClick('dashboard')}
@@ -154,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                   <span>{user?.name ? `${user.name.split(' ')[0]}'s Studio` : 'Maker Studio'}</span>
                 </button>
                 <button
-                  onClick={logout}
+                  onClick={() => void handleLogout()}
                   title="Sign Out"
                   className="p-2 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors"
                 >
@@ -171,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                   <span className="max-w-[100px] truncate">{user?.name || 'Customer'}</span>
                 </button>
                 <button
-                  onClick={logout}
+                  onClick={() => void handleLogout()}
                   title="Sign Out"
                   className="p-2 rounded-full text-[#7A5B62] hover:text-[#C0536A] hover:bg-[#FFE3E8]/60 transition-colors"
                 >
@@ -239,10 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                 <span>Maker Studio Dashboard 🌸</span>
               </button>
               <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => void handleLogout()}
                 className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#7A5B62] hover:bg-[#FFF0F3] flex items-center justify-between"
               >
                 <span>Sign Out ({user?.name || 'Maker'})</span>
@@ -258,10 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
                 <span>My Orders History</span>
               </button>
               <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => void handleLogout()}
                 className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#7A5B62] hover:bg-[#FFF0F3] flex items-center justify-between"
               >
                 <span>Sign Out ({user?.name || 'Customer'})</span>

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Heart, ArrowUp, RefreshCw } from 'lucide-react';
-import { siteConfig } from '../config/site.config';
-import { SocialLinks } from './SocialIcons';
+import { siteConfig } from '../../config/site.config';
+import { buildWhatsAppLink } from '../../utils/whatsapp';
+import { FounderCredit } from './FounderCredit';
+import { INSTAGRAM_GRADIENT, InstagramLogo, WHATSAPP_GREEN, WhatsAppLogo } from '../SocialIcons';
 
 interface FooterProps {
   onNavigate: (tab: string) => void;
@@ -42,7 +44,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onReplaySplash }) =>
 
             {/* Social Icons & Splash Replay */}
             <div className="pt-2 flex items-center gap-3">
-              <SocialLinks />
+              <a
+                href={siteConfig.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-sm hover:scale-110 hover:shadow-md transition-all"
+                style={{ background: INSTAGRAM_GRADIENT }}
+                aria-label={`BloomCraft on Instagram (${siteConfig.instagramHandle})`}
+                title={`Instagram ${siteConfig.instagramHandle}`}
+              >
+                <InstagramLogo className="w-5 h-5" />
+              </a>
+
+              <a
+                href={buildWhatsAppLink("Hi BloomCraft! 🌸 I'd love to know more about your crochet collection.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full text-white flex items-center justify-center shadow-sm hover:scale-110 hover:shadow-md transition-all"
+                style={{ backgroundColor: WHATSAPP_GREEN }}
+                aria-label={`Chat with BloomCraft on WhatsApp (${siteConfig.whatsappFormatted})`}
+                title={`WhatsApp ${siteConfig.whatsappFormatted}`}
+              >
+                <WhatsAppLogo className="w-5 h-5" />
+              </a>
 
               {/* Replay intro animation button */}
               <button
@@ -182,6 +206,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onReplaySplash }) =>
             <Heart className="w-3.5 h-3.5 text-[#D96B82] fill-[#D96B82] inline" />
             <span>in Vadodara, Gujarat. © {new Date().getFullYear()} {siteConfig.name}.</span>
           </div>
+
+          <FounderCredit />
 
           <button
             onClick={scrollToTop}

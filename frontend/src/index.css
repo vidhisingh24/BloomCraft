@@ -25,6 +25,33 @@
     color: var(--color-text-main);
   }
 
+  /* Tailwind 4 resets buttons to the arrow cursor: show the hand on everything clickable. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='tab'],
+  a[href],
+  summary,
+  select:not(:disabled),
+  label:has(input[type='checkbox'], input[type='radio']),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='file']:not(:disabled),
+  input[type='date']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Typing fields show the text cursor; disabled controls show "not allowed" (or a wait cursor while saving). */
+  input:not([type='checkbox'], [type='radio'], [type='file'], [type='date']):not(:disabled),
+  textarea:not(:disabled) {
+    cursor: text;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
   }
