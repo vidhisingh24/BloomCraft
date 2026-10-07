@@ -303,7 +303,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#FFFDFB] border-r border-[#F4A6B7]/30 p-5 shrink-0 justify-between min-h-screen sticky top-0">
+      <aside className="hidden md:flex flex-col w-64 bg-[#FFFDFB] border-r border-[#F4A6B7]/30 p-5 shrink-0 justify-between h-screen sticky top-0 self-start overflow-y-auto">
         <div className="space-y-6">
           {/* Brand Logo */}
           <div className="flex items-center gap-3 px-2">
@@ -404,7 +404,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
         {!hasLoaded && isLoading && <PageLoader label="Loading orders…" />}
         {!hasLoaded && !isLoading && (
           <div className="max-w-md mx-auto text-center py-16 space-y-3">
