@@ -228,4 +228,35 @@ update auth.users set phone = '919000000001', phone_confirmed_at = now()
 select test_helpers.check((select phone = '9000000001' and phone_verified from public.profiles
   where id = '00000000-0000-0000-0000-00000000000b'), 'a confirmed phone is saved on the profile');
 
+-- manual orders ----------------------------------------------------------------
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+select test_helpers.expect_error($q$select public.admin_add_manual_order('{"source":"instagram","customer":{"name":"X"},"items":[{"name":"Rose","quantity":1,"price":10000}]}'::jsonb)$q$, 'Only the maker');
+reset role;
+set role anon;
+select test_helpers.expect_error($q$select public.admin_add_manual_order('{}'::jsonb)$q$, 'permission denied');
+reset role;
+
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+create temp table manual_result as
+select public.admin_add_manual_order('{"source":"instagram","orderedAt":"2026-09-20","customer":{"name":"Insta Buyer","phone":"+91 98250 12345"},
+  "items":[{"name":"Rose keychain","quantity":2,"price":10000},{"name":"Custom bouquet","quantity":1,"price":45000,"customNote":"red & white"}],
+  "deliveryCharge":6000,"discount":1000,"deliveryMethod":"parcel","payment":{"method":"upi","provider":"Google Pay","status":"paid"},
+  "status":"delivered","note":"DM order"}'::jsonb) as o;
+select test_helpers.check((select (o -> 'pricing' ->> 'total')::int = 70000 and o ->> 'source' = 'instagram'
+  and o -> 'payment' ->> 'status' = 'paid' and o -> 'customer' ->> 'phone' = '9825012345'
+  and (o ->> 'createdAt')::date = '2026-09-20' from manual_result), 'maker records an Instagram order with the right total and date');
+select test_helpers.expect_error($q$select public.admin_add_manual_order('{"source":"whatsapp","customer":{"name":"No Items"},"items":[]}'::jsonb)$q$, 'at least one item');
+select test_helpers.expect_error($q$select public.admin_add_manual_order('{"source":"whatsapp","customer":{"name":"Bad Phone","phone":"123"},"items":[{"name":"x","quantity":1,"price":100}]}'::jsonb)$q$, '10 digits');
+select test_helpers.expect_error($q$select public.admin_add_manual_order('{"source":"website","customer":{"name":"Fake"},"items":[{"name":"x","quantity":1,"price":100}]}'::jsonb)$q$, 'where the order came from');
+select test_helpers.expect_error($q$select public.admin_delete_manual_order('BC-' || to_char(now() at time zone 'Asia/Kolkata', 'YYYY') || '-00019')$q$, 'added by hand');
+select public.admin_delete_manual_order((select o ->> 'id' from manual_result));
+select test_helpers.check(not exists (select 1 from public.orders where id = (select o ->> 'id' from manual_result)), 'maker can delete a hand-recorded order');
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+select test_helpers.expect_error($q$select public.admin_delete_manual_order('BC-2026-00001')$q$, 'Only the maker');
+reset role;
+
 \echo 'All security tests passed.'
