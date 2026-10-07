@@ -1,17 +1,22 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_PUBLIC } from '../config/supabase.public';
 
+/** Env values pasted into hosting dashboards often keep their quote marks or spaces: drop them. */
+const clean = (value: string | undefined) => (value ?? '').trim().replace(/^["']+|["']+$/g, '').trim();
+
 // Accept the URL however it was copied from the dashboard (e.g. ".../rest/v1/" or a trailing slash).
-const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) || SUPABASE_PUBLIC.url)
-  .trim()
+const envUrl = clean(import.meta.env.VITE_SUPABASE_URL as string | undefined)
   .replace(/\/(rest|auth)\/v1\/?$/, '')
   .replace(/\/+$/, '');
-const key =
-  (
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
-    SUPABASE_PUBLIC.publishableKey
-  ).trim();
+const envKey =
+  clean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
+  clean(import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
+
+// A malformed dashboard value must never take the site down: fall back to the built-in project.
+const url = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(envUrl) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(envUrl)
+  ? envUrl
+  : SUPABASE_PUBLIC.url;
+const key = envKey && url === envUrl ? envKey : SUPABASE_PUBLIC.publishableKey;
 
 /** False only if both the project URL and its public key are missing. */
 export const isSupabaseConfigured = Boolean(url && key);
@@ -38,6 +43,8 @@ export function getSupabase(): SupabaseClient {
 /** Turns a Supabase/PostgREST error into a message that is safe to show customers. */
 export function friendlyError(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
   if (!error) return fallback;
+  // Keep the technical reason in the browser console (F12) for troubleshooting.
+  console.warn('[BloomCraft]', error);
   const e = error as { message?: string; code?: string; name?: string };
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'You seem to be offline. Please check your connection.';
   if (e.message && /failed to fetch|networkerror|load failed/i.test(e.message)) {
