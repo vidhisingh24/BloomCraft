@@ -194,4 +194,38 @@ select test_helpers.check((select status from public.custom_requests limit 1) = 
 select test_helpers.expect_error('truncate public.orders', 'permission denied');
 reset role;
 
+-- saved addresses ---------------------------------------------------------------
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+insert into public.addresses (label, full_name, phone, house, city, state, pincode, is_default)
+  values ('Home', 'Cust One', '9000000001', '12 A', 'Vadodara', 'Gujarat', '390007', true);
+insert into public.addresses (label, full_name, phone, house, city, state, pincode, is_default)
+  values ('Hostel', 'Cust One', '9000000001', 'Room 4', 'Vadodara', 'Gujarat', '390002', true);
+select test_helpers.check((select count(*) from public.addresses) = 2, 'customer saves addresses');
+select test_helpers.check((select label from public.addresses where is_default) = 'Hostel', 'a new default replaces the old one');
+select test_helpers.expect_error($q$insert into public.addresses (full_name, phone, house, city, state, pincode)
+  values ('X', '123', 'a', 'Vadodara', 'Gujarat', '390007')$q$, 'check constraint');
+select test_helpers.expect_error($q$insert into public.addresses (user_id, full_name, phone, house, city, state, pincode)
+  values ('00000000-0000-0000-0000-00000000000c', 'Evil', '9000000002', 'a', 'Vadodara', 'Gujarat', '390007')$q$, 'row-level security');
+reset role;
+
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000c';
+select test_helpers.check((select count(*) from public.addresses) = 0, 'other customers cannot see saved addresses');
+update public.addresses set house = 'hacked';
+delete from public.addresses;
+reset role;
+select test_helpers.check((select count(*) from public.addresses where house = 'hacked') = 0
+  and (select count(*) from public.addresses) = 2, 'other customers cannot change or delete saved addresses');
+
+set role anon;
+select test_helpers.expect_error('select * from public.addresses', 'permission denied');
+reset role;
+
+-- verified phone is copied to the profile ---------------------------------------
+update auth.users set phone = '919000000001', phone_confirmed_at = now()
+ where id = '00000000-0000-0000-0000-00000000000b';
+select test_helpers.check((select phone = '9000000001' and phone_verified from public.profiles
+  where id = '00000000-0000-0000-0000-00000000000b'), 'a confirmed phone is saved on the profile');
+
 \echo 'All security tests passed.'
