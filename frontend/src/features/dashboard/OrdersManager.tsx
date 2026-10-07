@@ -363,6 +363,19 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
+                      <button
+                        disabled={savingIds?.has(order.id)}
+                        onClick={() => {
+                          if (window.confirm(`Delete order ${order.id} (${order.customer.name}, ${formatPaise(order.pricing.total)})? This cannot be undone.`)) {
+                            onDeleteOrder(order.id);
+                          }
+                        }}
+                        className="p-1.5 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        title="Delete order"
+                        aria-label={`Delete order ${order.id}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </td>
                 </tr>
