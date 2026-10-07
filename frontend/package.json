@@ -12,6 +12,7 @@
     "check": "tsc -b && oxlint && vitest run && vite build"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "@types/canvas-confetti": "^1.9.0",
     "autoprefixer": "^10.6.1",
     "canvas-confetti": "^1.9.4",
