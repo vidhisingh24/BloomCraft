@@ -1,17 +1,19 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { SUPABASE_PUBLIC } from '../config/supabase.public';
 
 // Accept the URL however it was copied from the dashboard (e.g. ".../rest/v1/" or a trailing slash).
-const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '')
+const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) || SUPABASE_PUBLIC.url)
   .trim()
   .replace(/\/(rest|auth)\/v1\/?$/, '')
   .replace(/\/+$/, '');
 const key =
   (
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)
-  )?.trim() ?? '';
+    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
+    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
+    SUPABASE_PUBLIC.publishableKey
+  ).trim();
 
-/** False until VITE_SUPABASE_URL and the public (anon / publishable) key are set. */
+/** False only if both the project URL and its public key are missing. */
 export const isSupabaseConfigured = Boolean(url && key);
 
 let client: SupabaseClient | null = null;
