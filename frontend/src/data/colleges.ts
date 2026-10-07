@@ -5,7 +5,7 @@ export interface CollegeOption {
   popularDeliveryPoint: string;
 }
 
-export const MOCK_COLLEGES: CollegeOption[] = [
+export const COLLEGES: CollegeOption[] = [
   {
     id: 'msu-main',
     name: 'The Maharaja Sayajirao University of Baroda (MSU) - Main Campus',

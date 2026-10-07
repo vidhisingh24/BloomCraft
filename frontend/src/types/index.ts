@@ -78,12 +78,14 @@ export interface Delivery {
   charge: number; // in paise
 }
 
-export type PaymentMethod = 'upi' | 'cod' | 'gpay' | 'Google Pay (G.Pay)';
+export type PaymentMethod = 'upi' | 'cod';
 
 export interface Payment {
   method: PaymentMethod;
   status: 'pending' | 'awaiting_verification' | 'paid' | 'failed' | 'refunded';
   upiTxnRef?: string;
+  /** UPI app used, recorded for past in-person sales (e.g. "Google Pay"). */
+  provider?: string;
 }
 
 export type OrderStatus =
@@ -109,11 +111,23 @@ export interface OrderPricing {
   total: number; // in paise
 }
 
+/** A line of a placed order: a snapshot of the product at the time of purchase. */
+export interface OrderItem {
+  id: string;
+  productId: string;
+  name: string;
+  image: string;
+  quantity: number;
+  selectedColor?: string;
+  customNote?: string;
+  priceAtAdd: number; // in paise
+}
+
 export interface Order {
-  id: string; // BC-2026-00125
+  id: string; // BC-2026-00001
   createdAt: string; // ISO
   customer: Customer;
-  items: (CartItem & { name: string; image: string })[];
+  items: OrderItem[];
   pricing: OrderPricing;
   delivery: Delivery;
   payment: Payment;

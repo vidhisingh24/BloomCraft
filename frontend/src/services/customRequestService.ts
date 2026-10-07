@@ -1,124 +1,104 @@
 import type { CustomRequest } from '../types';
-import { INITIAL_CUSTOM_REQUESTS } from '../data/mock/customRequests';
-import { storage, STORAGE_KEYS } from './storage';
-import { generateCustomRequestId } from '../utils/ids';
-import { siteConfig } from '../config/site.config';
+import { getSupabase } from '../lib/supabase';
 
-function delay(ms: number = 300): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export interface CustomRequestInput {
+  customer: { name: string; phone: string; email?: string };
+  itemType?: string;
+  description: string;
+  colors: string[];
+  quantity?: number;
+  occasion?: string;
 }
 
-function getStoredCustomRequests(): CustomRequest[] {
-  const reqs = storage.get<CustomRequest[]>(STORAGE_KEYS.CUSTOM_REQUESTS, []);
-  if (!reqs || reqs.length === 0) {
-    storage.set(STORAGE_KEYS.CUSTOM_REQUESTS, INITIAL_CUSTOM_REQUESTS);
-    return INITIAL_CUSTOM_REQUESTS;
-  }
-  return reqs;
+interface CustomRequestRow {
+  id: string;
+  created_at: string;
+  customer: CustomRequest['customer'];
+  item_type: string | null;
+  reference_images: string[];
+  description: string;
+  colors: string[];
+  quantity: number;
+  budget: CustomRequest['budget'];
+  needed_by: string | null;
+  occasion: string | null;
+  status: CustomRequest['status'];
+  quoted_price: number | null;
+  notes: string | null;
+}
+
+function fromRow(r: CustomRequestRow): CustomRequest {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    customer: r.customer,
+    itemType: r.item_type ?? undefined,
+    referenceImages: r.reference_images,
+    description: r.description,
+    colors: r.colors,
+    quantity: r.quantity,
+    budget: r.budget,
+    neededBy: r.needed_by ?? undefined,
+    occasion: r.occasion ?? undefined,
+    status: r.status,
+    quotedPrice: r.quoted_price ?? undefined,
+    notes: r.notes ?? undefined,
+  };
+}
+
+async function update(id: string, patch: Partial<CustomRequestRow>): Promise<CustomRequest> {
+  const { data, error } = await getSupabase()
+    .from('custom_requests')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return fromRow(data as CustomRequestRow);
 }
 
 export const customRequestService = {
-  /**
-   * Creates and persists a custom crochet inquiry
-   */
-  async create(
-    payload: Omit<CustomRequest, 'id' | 'createdAt' | 'status'>
-  ): Promise<CustomRequest> {
-    await delay(400);
-
-    if (!siteConfig.useMockApi) {
-      /*
-       * const res = await fetch(`${siteConfig.apiBaseUrl}/custom-requests`, {
-       *   method: 'POST',
-       *   headers: { 'Content-Type': 'application/json' },
-       *   body: JSON.stringify(payload),
-       * });
-       * return await res.json();
-       */
-    }
-
-    const id = generateCustomRequestId();
-    const newRequest: CustomRequest = {
-      ...payload,
-      id,
-      createdAt: new Date().toISOString(),
-      status: 'received',
-    };
-
-    const current = getStoredCustomRequests();
-    const updated = [newRequest, ...current];
-    storage.set(STORAGE_KEYS.CUSTOM_REQUESTS, updated);
-
-    return newRequest;
+  /** Saves a custom-order enquiry so it shows up in the Maker Studio. Returns its reference. */
+  async create(input: CustomRequestInput): Promise<{ id: string }> {
+    const { data, error } = await getSupabase().rpc('submit_custom_request', { payload: input });
+    if (error) throw error;
+    return { id: (data as { id: string }).id };
   },
 
-  /**
-   * Fetches all custom requests
-   */
+  /** Maker: every request, newest first. */
   async getAll(): Promise<CustomRequest[]> {
-    await delay(250);
-
-    if (!siteConfig.useMockApi) {
-      /*
-       * const res = await fetch(`${siteConfig.apiBaseUrl}/custom-requests`);
-       * return await res.json();
-       */
-    }
-
-    const reqs = getStoredCustomRequests();
-    return [...reqs].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const { data, error } = await getSupabase()
+      .from('custom_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data as CustomRequestRow[]).map(fromRow);
   },
 
-  /**
-   * Fetches a custom request by ID
-   */
-  async getById(id: string): Promise<CustomRequest | null> {
-    await delay(150);
-    const reqs = getStoredCustomRequests();
-    return reqs.find((r) => r.id.toUpperCase() === id.trim().toUpperCase()) || null;
+  async updateStatus(id: string, status: CustomRequest['status']): Promise<CustomRequest> {
+    return update(id, { status });
   },
 
-  /**
-   * Updates status of custom request
-   */
-  async updateStatus(
-    id: string,
-    status: CustomRequest['status']
-  ): Promise<CustomRequest> {
-    await delay(300);
-
-    const reqs = getStoredCustomRequests();
-    const index = reqs.findIndex((r) => r.id.toUpperCase() === id.trim().toUpperCase());
-    if (index === -1) throw new Error(`Custom Request ${id} not found`);
-
-    reqs[index] = { ...reqs[index], status };
-    storage.set(STORAGE_KEYS.CUSTOM_REQUESTS, reqs);
-    return reqs[index];
-  },
-
-  /**
-   * Updates maker quote price and notes
-   */
-  async updateQuote(
-    id: string,
-    quotedPrice: number,
-    notes?: string
-  ): Promise<CustomRequest> {
-    await delay(300);
-
-    const reqs = getStoredCustomRequests();
-    const index = reqs.findIndex((r) => r.id.toUpperCase() === id.trim().toUpperCase());
-    if (index === -1) throw new Error(`Custom Request ${id} not found`);
-
-    reqs[index] = {
-      ...reqs[index],
-      quotedPrice,
-      notes: notes || reqs[index].notes,
+  /** Maker: send a quote (₹) with optional notes. */
+  async updateQuote(id: string, quotedPrice: number, notes?: string): Promise<CustomRequest> {
+    return update(id, {
+      quoted_price: quotedPrice,
       status: 'quoted',
+      ...(notes !== undefined ? { notes } : {}),
+    });
+  },
+
+  /** Maker: live feed of new requests. Returns an unsubscribe function. */
+  subscribe(onInsert: (request: CustomRequest) => void): () => void {
+    const supabase = getSupabase();
+    const channel = supabase
+      .channel('custom-requests-feed')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'custom_requests' }, (payload) =>
+        onInsert(fromRow(payload.new as CustomRequestRow))
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
     };
-    storage.set(STORAGE_KEYS.CUSTOM_REQUESTS, reqs);
-    return reqs[index];
   },
 };

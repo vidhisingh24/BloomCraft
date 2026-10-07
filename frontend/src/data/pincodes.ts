@@ -64,3 +64,27 @@ export function lookupPincode(pincode: string): PincodeInfo | null {
   const clean = pincode.replace(/\s+/g, '');
   return KNOWN_PINCODES[clean] || null;
 }
+
+/**
+ * PIN code → city/state for any Indian PIN: the list above first (instant, offline),
+ * then India Post's public lookup. Resolves to null when unknown or offline.
+ */
+export async function findPincode(pincode: string): Promise<PincodeInfo | null> {
+  const known = lookupPincode(pincode);
+  if (known || !/^[1-9]\d{5}$/.test(pincode)) return known;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const body = (await res.json()) as {
+      Status: string;
+      PostOffice: { Name: string; District: string; State: string }[] | null;
+    }[];
+    const office = body[0]?.Status === 'Success' ? body[0].PostOffice?.[0] : undefined;
+    return office ? { city: office.District, state: office.State, area: office.Name } : null;
+  } catch {
+    return null;
+  }
+}

@@ -1,14 +1,12 @@
 /**
- * Typed, safe localStorage wrapper with versioned keys and cross-tab synchronization.
+ * Typed, safe localStorage wrapper for per-device conveniences (cart, wishlist, checkout
+ * draft) with versioned keys and cross-tab sync. Orders and accounts live in Supabase.
  */
 
 export const STORAGE_KEYS = {
   CART: 'bloomcraft:v1:cart',
   WISHLIST: 'bloomcraft:v1:wishlist',
-  ORDERS: 'bloomcraft:v1:orders',
-  CUSTOM_REQUESTS: 'bloomcraft:v1:custom_requests',
   CHECKOUT_DRAFT: 'bloomcraft:v1:checkout_draft',
-  CATALOG_OVERRIDES: 'bloomcraft:v1:catalog_overrides',
   INTRO_SHOWN: 'bloomcraft:v1:intro_shown',
 } as const;
 
