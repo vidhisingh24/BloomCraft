@@ -16,6 +16,22 @@ export interface PlaceOrderInput {
   clientRef: string;
 }
 
+export type OrderSource = NonNullable<Order['source']>;
+
+/** An order the maker records by hand (prices in paise). */
+export interface ManualOrderInput {
+  source: Exclude<OrderSource, 'website'>;
+  orderedAt: string; // YYYY-MM-DD
+  customer: { name: string; phone?: string };
+  items: { name: string; quantity: number; price: number; productId?: string; image?: string; customNote?: string }[];
+  deliveryMethod: DeliveryMethod;
+  deliveryCharge: number;
+  discount: number;
+  payment: { method: PaymentMethod; provider?: string; status: 'paid' | 'pending' };
+  status: OrderStatus;
+  note?: string;
+}
+
 interface OrderRow {
   id: string;
   created_at: string;
@@ -29,6 +45,8 @@ interface OrderRow {
   coupon_code: string | null;
   status: OrderStatus;
   status_history: Order['statusHistory'];
+  source?: Order['source'];
+  maker_note?: string | null;
 }
 
 function fromRow(r: OrderRow): Order {
@@ -45,13 +63,21 @@ function fromRow(r: OrderRow): Order {
     couponCode: r.coupon_code ?? undefined,
     status: r.status,
     statusHistory: r.status_history,
+    source: r.source ?? 'website',
+    makerNote: r.maker_note ?? undefined,
   };
 }
 
 /** RPCs return the order already in the app's shape (see public.order_to_json). */
 function fromRpc(data: unknown): Order {
-  const o = data as Order & { giftMessage: string | null; couponCode: string | null };
-  return { ...o, giftMessage: o.giftMessage ?? undefined, couponCode: o.couponCode ?? undefined };
+  const o = data as Order & { giftMessage: string | null; couponCode: string | null; makerNote?: string | null };
+  return {
+    ...o,
+    giftMessage: o.giftMessage ?? undefined,
+    couponCode: o.couponCode ?? undefined,
+    makerNote: o.makerNote ?? undefined,
+    source: o.source ?? 'website',
+  };
 }
 
 export const orderService = {
@@ -102,14 +128,32 @@ export const orderService = {
     return fromRpc(data);
   },
 
+  /** Maker: record a sale that happened outside the website (Instagram, WhatsApp, in person…). */
+  async createManual(input: ManualOrderInput): Promise<Order> {
+    const { data, error } = await getSupabase().rpc('admin_add_manual_order', { payload: input });
+    if (error) throw error;
+    return fromRpc(data);
+  },
+
+  /** Maker: delete an order that was recorded by hand (website orders cannot be deleted). */
+  async deleteManual(id: string): Promise<void> {
+    const { error } = await getSupabase().rpc('admin_delete_manual_order', { p_order_id: id });
+    if (error) throw error;
+  },
+
   /** Maker: live feed of new and changed orders. Returns an unsubscribe function. */
-  subscribe(onChange: (order: Order, event: 'INSERT' | 'UPDATE') => void): () => void {
+  subscribe(
+    onChange: (order: Order, event: 'INSERT' | 'UPDATE') => void,
+    onDelete?: (orderId: string) => void
+  ): () => void {
     const supabase = getSupabase();
     const channel = supabase
       .channel('orders-feed')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           onChange(fromRow(payload.new as OrderRow), payload.eventType);
+        } else if (payload.eventType === 'DELETE' && onDelete) {
+          onDelete((payload.old as { id: string }).id);
         }
       })
       .subscribe();

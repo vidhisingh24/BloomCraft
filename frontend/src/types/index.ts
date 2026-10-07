@@ -136,6 +136,10 @@ export interface Order {
   couponCode?: string;
   status: OrderStatus;
   statusHistory: StatusHistoryEntry[];
+  /** Where the order came from: the website, or recorded by the maker (Instagram, WhatsApp…). */
+  source?: 'website' | 'instagram' | 'whatsapp' | 'in_person' | 'other';
+  /** Private note the maker added to a hand-recorded order. */
+  makerNote?: string;
 }
 
 export interface CustomRequest {

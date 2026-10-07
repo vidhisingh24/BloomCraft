@@ -13,7 +13,7 @@ import {
   LogOut
 } from 'lucide-react';
 import type { Order, CustomRequest, Product, OrderStatus } from '../../types';
-import { orderService } from '../../services/orderService';
+import { orderService, type ManualOrderInput } from '../../services/orderService';
 import { customRequestService } from '../../services/customRequestService';
 import { productService } from '../../services/productService';
 import { useToast } from '../../context/ToastContext';
@@ -99,13 +99,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
         if (event === 'INSERT' && !exists) return [order, ...prev];
         return prev.map((o) => (o.id === order.id ? order : o));
       });
-      if (event === 'INSERT') {
+      // Orders the maker records by hand need no alert.
+      if (event === 'INSERT' && (order.source ?? 'website') === 'website') {
         const { title, body } = orderAlertText(order);
         playChime();
         systemNotify(title, body);
         showToast(title, body, 'cart');
       }
-    });
+    }, (orderId) => setOrders((prev) => prev.filter((o) => o.id !== orderId)));
     const stopRequests = customRequestService.subscribe((request) => {
       setCustomRequests((prev) => (prev.some((r) => r.id === request.id) ? prev : [request, ...prev]));
       playChime();
@@ -204,6 +205,29 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
         showToast('Price Updated', `${updated.name} updated to ₹${pricePaise / 100}`, 'cart');
       } catch (err) {
         showToast('Error', friendlyError(err), 'info');
+      }
+    });
+
+  const handleAddManualOrder = async (input: ManualOrderInput): Promise<boolean> => {
+    try {
+      const created = await orderService.createManual(input);
+      setOrders((prev) => (prev.some((o) => o.id === created.id) ? prev : [created, ...prev]));
+      showToast('Order added ✍️', `${created.id} · ${created.customer.name}`, 'cart');
+      return true;
+    } catch (err) {
+      showToast('Could not add the order', friendlyError(err), 'info');
+      return false;
+    }
+  };
+
+  const handleDeleteManualOrder = (orderId: string) =>
+    withSaving(orderId, async () => {
+      try {
+        await orderService.deleteManual(orderId);
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+        showToast('Order deleted', orderId, 'info');
+      } catch (err) {
+        showToast('Could not delete the order', friendlyError(err), 'info');
       }
     });
 
@@ -403,8 +427,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onExitDashboar
         {hasLoaded && activeTab === 'orders' && (
           <OrdersManager
             orders={orders}
+            products={products}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onUpdatePaymentStatus={handleUpdatePaymentStatus}
+            onAddManualOrder={handleAddManualOrder}
+            onDeleteManualOrder={handleDeleteManualOrder}
             savingIds={savingIds}
           />
         )}

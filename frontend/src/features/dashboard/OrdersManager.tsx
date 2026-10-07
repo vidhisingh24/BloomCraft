@@ -4,9 +4,13 @@ import {
   MessageCircle, 
   Download,
   Eye,
-  X
+  X,
+  Plus,
+  Trash2
 } from 'lucide-react';
-import type { Order, OrderStatus, Payment } from '../../types';
+import type { Order, OrderStatus, Payment, Product } from '../../types';
+import type { ManualOrderInput } from '../../services/orderService';
+import { ManualOrderForm } from './ManualOrderForm';
 import { formatPaise } from '../../utils/currency';
 import { formatISTDate } from '../../utils/date';
 import { useToast } from '../../context/ToastContext';
@@ -16,6 +20,10 @@ interface OrdersManagerProps {
   orders: Order[];
   onUpdateOrderStatus: (orderId: string, newStatus: OrderStatus, note?: string) => void;
   onUpdatePaymentStatus: (orderId: string, status: Payment['status']) => void;
+  products: Product[];
+  /** Resolves true when the order was saved. */
+  onAddManualOrder: (input: ManualOrderInput) => Promise<boolean>;
+  onDeleteManualOrder: (orderId: string) => void;
   /** Orders with a save in progress: their controls are disabled until it finishes. */
   savingIds?: ReadonlySet<string>;
 }
@@ -26,8 +34,13 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
   orders,
   onUpdateOrderStatus,
   onUpdatePaymentStatus,
+  products,
+  onAddManualOrder,
+  onDeleteManualOrder,
   savingIds,
 }) => {
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [savingManual, setSavingManual] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [selectedMethod, setSelectedMethod] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,7 +152,13 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowManualForm(true)}
+            className="px-4 py-2 rounded-xl bg-[#C0536A] text-xs font-bold text-white hover:bg-[#A83D53] transition-all flex items-center gap-1.5 shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add order manually
+          </button>
           <button
             onClick={handleExportCsv}
             className="px-4 py-2 rounded-xl bg-white border border-[#EBD8DC] text-xs font-bold text-[#3D272A] hover:bg-[#FFE3E8] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
@@ -231,6 +250,7 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
                   <td className="py-3.5 px-4">
                     <span className="font-mono font-bold text-sm text-[#3D272A] block">{order.id}</span>
                     <span className="text-[10px] text-[#A38B90]">{formatISTDate(order.createdAt)}</span>
+                    <SourceBadge source={order.source} />
                   </td>
 
                   <td className="py-3.5 px-4">
@@ -404,7 +424,27 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
               </div>
             </div>
 
-            <div className="pt-3 flex gap-2">
+            {viewingOrder.makerNote && (
+              <p className="text-xs text-[#5C3E45] bg-[#FAF8F5] border border-[#F0E6E8] rounded-xl px-3 py-2">
+                📝 {viewingOrder.makerNote}
+              </p>
+            )}
+
+            <div className="pt-3 flex flex-wrap gap-2">
+              {(viewingOrder.source ?? 'website') !== 'website' && (
+                <button
+                  disabled={savingIds?.has(viewingOrder.id)}
+                  onClick={() => {
+                    if (window.confirm(`Delete ${viewingOrder.id} (${viewingOrder.customer.name})? This cannot be undone.`)) {
+                      onDeleteManualOrder(viewingOrder.id);
+                      setViewingOrder(null);
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-full border border-red-200 text-xs font-bold text-red-700 hover:bg-red-50 flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </button>
+              )}
               <button
                 onClick={() => handleWhatsAppCustomer(viewingOrder)}
                 className="flex-1 py-2.5 rounded-full bg-[#25D366] text-white text-xs font-bold hover:bg-[#20bd5a] flex items-center justify-center gap-1.5 cursor-pointer"
@@ -421,6 +461,36 @@ export const OrdersManager: React.FC<OrdersManagerProps> = ({
           </div>
         </div>
       )}
+
+      {showManualForm && (
+        <ManualOrderForm
+          products={products}
+          busy={savingManual}
+          onClose={() => setShowManualForm(false)}
+          onSubmit={(input) => {
+            setSavingManual(true);
+            void onAddManualOrder(input).then((ok) => {
+              setSavingManual(false);
+              if (ok) setShowManualForm(false);
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
+
+const SOURCE_LABEL: Record<NonNullable<Order['source']>, string> = {
+  website: '🌐 Website',
+  instagram: '📸 Instagram',
+  whatsapp: '💬 WhatsApp',
+  in_person: '🤝 In person',
+  other: '✨ Offline',
+};
+
+const SourceBadge: React.FC<{ source?: Order['source'] }> = ({ source = 'website' }) =>
+  source === 'website' ? null : (
+    <span className="mt-1 inline-block px-2 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EBD8DC] text-[10px] font-semibold text-[#5C3E45]">
+      {SOURCE_LABEL[source]}
+    </span>
+  );
