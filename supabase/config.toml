@@ -1,0 +1,5 @@
+project_id = "bloomcraft"
+
+# Called by a Database Webhook with a shared secret header, not by signed-in users.
+[functions.notify-maker]
+verify_jwt = false
