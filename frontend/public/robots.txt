@@ -1,5 +1,2 @@
 User-agent: *
 Allow: /
-Disallow: /maker/
-
-Sitemap: https://bloomcraft.in/sitemap.xml
