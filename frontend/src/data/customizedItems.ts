@@ -20,10 +20,10 @@ export interface CustomizedItem {
 export const CUSTOMIZED_ITEMS: CustomizedItem[] = [
   {
     id: 'custom-rakhi',
-    title: 'Customized Rakhi (Set of 5)',
+    title: 'Customized Rakhi (Set of 6)',
     category: 'customized',
-    badge: 'Festive Special • Set of 5',
-    description: 'Exquisite set of 5 handcrafted floral crochet Rakhis with glistening pearl beads on delicate colored threads (Sunflower, Pink Bloom, Daisy, Crimson Flower, Sky Blue Rose).',
+    badge: 'Festive Special • Set of 6',
+    description: 'Exquisite set of 6 handcrafted floral crochet Rakhis with glistening pearl beads on delicate colored threads (Sunflower, Pink Bloom, Daisy, Crimson Flower, Sky Blue Rose).',
     image: '/images/customized/custom_rakhi.png',
     price: 410,
     pricePaise: 41000,

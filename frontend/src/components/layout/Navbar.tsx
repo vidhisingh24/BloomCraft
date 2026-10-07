@@ -176,7 +176,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
             ) : isCustomer ? (
               <div className="hidden lg:flex items-center gap-2">
                 <button
-                  onClick={() => handleNavClick('orders')}
+                  onClick={() => handleNavClick('profile')}
+                  title="My profile"
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-[#EBD8DC] text-xs font-semibold text-[#5C3E45] hover:bg-[#FFF0F3] hover:text-[#C0536A] transition-all shadow-xs"
                 >
                   <span className="text-sm">🌸</span>
@@ -261,10 +262,23 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenL
           ) : isCustomer ? (
             <>
               <button
+                onClick={() => handleNavClick('profile')}
+                className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#5C3E45] hover:bg-[#FFF0F3] flex items-center justify-between"
+              >
+                <span>My Profile & Addresses</span>
+                <User className="w-4 h-4" />
+              </button>
+              <button
                 onClick={() => handleNavClick('orders')}
                 className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#5C3E45] hover:bg-[#FFF0F3] flex items-center justify-between"
               >
                 <span>My Orders History</span>
+              </button>
+              <button
+                onClick={() => handleNavClick('settings')}
+                className="w-full text-left px-4 py-2.5 rounded-2xl text-sm font-medium text-[#5C3E45] hover:bg-[#FFF0F3] flex items-center justify-between"
+              >
+                <span>Settings</span>
               </button>
               <button
                 onClick={() => void handleLogout()}

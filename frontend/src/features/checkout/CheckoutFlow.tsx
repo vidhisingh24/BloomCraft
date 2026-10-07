@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { addressService, formatAddress, type SavedAddress } from '../../services/addressService';
+import { PhoneNumberCard } from '../account/PhoneNumberCard';
+import { siteConfig } from '../../config/site.config';
 import { DELIVERY_METHODS, VADODARA_AREAS, VADODARA_TIME_SLOTS, INDIAN_STATES } from '../../config/delivery.config';
 import { COLLEGES } from '../../data/colleges';
 import { findPincode } from '../../data/pincodes';
@@ -134,6 +137,50 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     setActiveDeliveryMethod(draft.deliveryMethod);
   }, [draft.deliveryMethod, setActiveDeliveryMethod]);
 
+  // Saved addresses (signed-in customers): pick one for parcel delivery, or save a new one.
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setSavedAddresses([]);
+      return;
+    }
+    let active = true;
+    addressService
+      .list()
+      .then((list) => active && setSavedAddresses(list))
+      .catch(() => active && setSavedAddresses([]));
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const applySavedAddress = (a: SavedAddress) => {
+    setSelectedAddressId(a.id);
+    setDraft((d) => ({
+      ...d,
+      parcelDetails: {
+        ...d.parcelDetails,
+        house: a.house,
+        street: [a.street, a.landmark && `near ${a.landmark}`].filter(Boolean).join(', '),
+        area: a.area ?? '',
+        city: a.city,
+        state: a.state,
+        pincode: a.pincode,
+      },
+    }));
+  };
+
+  // Phone verification is required before ordering when SMS codes are switched on.
+  const needsVerifiedPhone = siteConfig.auth.phoneOtp && !user?.phoneVerified;
+  useEffect(() => {
+    if (siteConfig.auth.phoneOtp && user?.phoneVerified && user.phone) {
+      setDraft((d) => (d.customer.phone === user.phone ? d : { ...d, customer: { ...d.customer, phone: user.phone! } }));
+    }
+  }, [user]);
+
   // Signed in: fill in name / phone / e-mail from the account (never overwriting what was typed).
   useEffect(() => {
     if (!user) return;
@@ -195,6 +242,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   const handleNextFromStep1 = (e: React.FormEvent) => {
     e.preventDefault();
+    if (needsVerifiedPhone) {
+      showToast(
+        user ? 'Verify your mobile number' : 'Please sign in',
+        user ? 'Enter the SMS code above to continue.' : 'Sign in and verify your mobile number to place an order.',
+        'info'
+      );
+      return;
+    }
     const res = validateCustomer(draft.customer);
     if (!res.isValid) {
       setErrors(res.errors);
@@ -217,6 +272,28 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       return;
     }
     setErrors({});
+    if (draft.deliveryMethod === 'parcel' && user && selectedAddressId === 'new' && saveNewAddress) {
+      const p = draft.parcelDetails;
+      addressService
+        .create({
+          label: savedAddresses.length === 0 ? 'Home' : 'Other',
+          fullName: draft.customer.name,
+          phone: normalizeIndianPhone(draft.customer.phone) || draft.customer.phone,
+          house: p.house,
+          street: p.street,
+          area: p.area,
+          city: p.city,
+          state: p.state,
+          pincode: p.pincode,
+          isDefault: savedAddresses.length === 0,
+        })
+        .then((saved) => {
+          setSavedAddresses((list) => [...list, saved]);
+          setSelectedAddressId(saved.id);
+          showToast('Address saved to your profile 📍', '', 'success');
+        })
+        .catch(() => undefined);
+    }
     trackEvent('select_delivery_method', { method: draft.deliveryMethod });
     goToStep(3);
   };
@@ -406,9 +483,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </p>
               </div>
 
+              {siteConfig.auth.phoneOtp && user && !user.phoneVerified && <PhoneNumberCard />}
+
               {!user && (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl bg-[#FFF5F7] border border-[#F4A6B7]/40 px-4 py-3 text-xs text-[#7A5B62]">
-                  <span>Ordering as a guest. Sign in to keep this order in your account and see it on any device.</span>
+                  <span>
+                    {siteConfig.auth.phoneOtp
+                      ? 'Please sign in and verify your mobile number to place an order.'
+                      : 'Ordering as a guest. Sign in to keep this order in your account and see it on any device.'}
+                  </span>
                   <button
                     type="button"
                     onClick={() => window.dispatchEvent(new CustomEvent('nav-to', { detail: 'auth' }))}
@@ -833,6 +916,46 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     </span>
                   </div>
 
+                  {user && savedAddresses.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-[#3D272A] uppercase tracking-wider">Deliver to</p>
+                      {savedAddresses.map((a) => (
+                        <label
+                          key={a.id}
+                          className={`flex items-start gap-3 p-3 rounded-xl border bg-white cursor-pointer ${
+                            selectedAddressId === a.id ? 'border-[#D96B82] ring-2 ring-[#FFE3E8]' : 'border-[#EBD8DC]'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="savedAddress"
+                            checked={selectedAddressId === a.id}
+                            onChange={() => applySavedAddress(a)}
+                            className="mt-1 accent-[#C0536A]"
+                          />
+                          <span className="text-xs text-[#7A5B62]">
+                            <span className="font-bold text-[#3D272A]">{a.label}</span> · {a.fullName}, +91 {a.phone}
+                            <span className="block">{formatAddress(a)}</span>
+                          </span>
+                        </label>
+                      ))}
+                      <label
+                        className={`flex items-center gap-3 p-3 rounded-xl border bg-white cursor-pointer text-xs font-semibold text-[#3D272A] ${
+                          selectedAddressId === 'new' ? 'border-[#D96B82] ring-2 ring-[#FFE3E8]' : 'border-[#EBD8DC]'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="savedAddress"
+                          checked={selectedAddressId === 'new'}
+                          onChange={() => setSelectedAddressId('new')}
+                          className="accent-[#C0536A]"
+                        />
+                        + Use a new address
+                      </label>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-[#3D272A] uppercase tracking-wider mb-1">
@@ -931,6 +1054,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       </select>
                     </div>
                   </div>
+
+                  {user && selectedAddressId === 'new' && (
+                    <label className="flex items-center gap-2 text-xs text-[#5C3E45]">
+                      <input
+                        type="checkbox"
+                        checked={saveNewAddress}
+                        onChange={(e) => setSaveNewAddress(e.target.checked)}
+                        className="w-4 h-4 accent-[#C0536A]"
+                      />
+                      Save this address to my profile for next time
+                    </label>
+                  )}
                 </div>
               )}
 

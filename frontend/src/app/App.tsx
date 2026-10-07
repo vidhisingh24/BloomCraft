@@ -31,6 +31,8 @@ const ReceiptView = lazy(() => import('../features/orders/ReceiptView').then((m)
 const TrackOrderPage = lazy(() => import('../features/orders/TrackOrderPage').then((m) => ({ default: m.TrackOrderPage })));
 const OrdersHistoryPage = lazy(() => import('../features/orders/OrdersHistoryPage').then((m) => ({ default: m.OrdersHistoryPage })));
 const WishlistPage = lazy(() => import('../features/wishlist/WishlistPage').then((m) => ({ default: m.WishlistPage })));
+const ProfilePage = lazy(() => import('../features/account/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const SettingsPage = lazy(() => import('../features/account/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PolicyPages = lazy(() => import('../features/policy/PolicyPages').then((m) => ({ default: m.PolicyPages })));
 const DashboardLayout = lazy(() => import('../features/dashboard').then((m) => ({ default: m.DashboardLayout })));
 import type { Product, Order, DeliveryMethod } from '../types';
@@ -360,6 +362,35 @@ export function AppContent() {
               }}
               onShopNow={() => {
                 setActiveTab('keychains');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          )}
+
+          {/* PROFILE & SETTINGS (signed-in customers) */}
+          {(activeTab === 'profile' || activeTab === 'settings') && !isAuthenticated && !authLoading && (
+            <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
+              <h2 className="text-2xl font-serif font-bold text-[#3D272A]">Sign in to see your profile</h2>
+              <button
+                onClick={() => setActiveTab('auth')}
+                className="px-8 py-3 rounded-full bg-[#D96B82] text-white font-medium hover:bg-[#C0536A]"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
+          {activeTab === 'profile' && isAuthenticated && (
+            <ProfilePage
+              onNavigate={(tab) => {
+                setActiveTab(tab);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          )}
+          {activeTab === 'settings' && isAuthenticated && (
+            <SettingsPage
+              onNavigate={(tab) => {
+                setActiveTab(tab);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
             />
