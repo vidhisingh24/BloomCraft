@@ -132,3 +132,16 @@ export function validateDelivery(
     errors,
   };
 }
+
+/** Keeps only the digits of a typed value (phone, PIN, OTP and UTR inputs). */
+export function digitsOnly(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
+/** Returns a reason the password is too weak, or null when it is fine. */
+export function passwordProblem(password: string): string | null {
+  if (password.length < 8) return 'Use at least 8 characters for your password.';
+  if (password.length > 72) return 'Use at most 72 characters for your password.';
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return 'Use both letters and numbers in your password.';
+  return null;
+}

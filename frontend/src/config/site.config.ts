@@ -20,8 +20,9 @@ export interface SiteConfig {
   shippingNote: string;
   upiId: string;
   upiPayeeName: string;
-  apiBaseUrl: string;
-  useMockApi: boolean;
+  founderName: string;
+  /** Show sign-in buttons only for providers switched on in Supabase → Authentication. */
+  auth: { google: boolean };
 }
 
 export const siteConfig: SiteConfig = {
@@ -34,7 +35,8 @@ export const siteConfig: SiteConfig = {
   whatsappFormatted: env.VITE_WHATSAPP_FORMATTED || "+91 93160 97667",
   instagramHandle: env.VITE_INSTAGRAM_HANDLE || "@bloomcraftt.co",
   instagramUrl: env.VITE_INSTAGRAM_URL || "https://www.instagram.com/bloomcraftt.co/",
-  email: env.VITE_SUPPORT_EMAIL || "hello@bloomcraft.in",
+  /** Public support e-mail; leave empty to offer WhatsApp / Instagram only. */
+  email: env.VITE_SUPPORT_EMAIL || "",
   address: "Handmade Studio, Vadodara, Gujarat, India",
   city: "Vadodara",
   state: "Gujarat",
@@ -43,6 +45,8 @@ export const siteConfig: SiteConfig = {
   shippingNote: "🌸 Free handcrafted gift note with every order • Free parcel shipping above ₹999",
   upiId: env.VITE_UPI_ID || "vidhiisingh2403@okicici",
   upiPayeeName: env.VITE_UPI_PAYEE_NAME || "Vidhi Singh",
-  apiBaseUrl: env.VITE_API_BASE_URL || "https://api.bloomcraft.in/v1",
-  useMockApi: env.VITE_USE_MOCK_API !== "false", // Defaults to true for mock demo
+  founderName: "Vidhi Singh",
+  auth: {
+    google: env.VITE_ENABLE_GOOGLE_LOGIN === "true",
+  },
 };

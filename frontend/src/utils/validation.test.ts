@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   normalizeIndianPhone,
+  passwordProblem,
+  digitsOnly,
   validatePhone,
   validateEmail,
   validatePincode,
@@ -119,5 +121,24 @@ describe('Validation utilities', () => {
       });
       expect(invalid.isValid).toBe(false);
     });
+  });
+});
+
+describe('passwordProblem', () => {
+  it('accepts 8+ characters with letters and numbers', () => {
+    expect(passwordProblem('bloom2026')).toBeNull();
+  });
+  it('rejects short, letter-only, number-only and overlong passwords', () => {
+    expect(passwordProblem('ab12')).toMatch(/8 characters/);
+    expect(passwordProblem('onlyletters')).toMatch(/letters and numbers/);
+    expect(passwordProblem('1234567890')).toMatch(/letters and numbers/);
+    expect(passwordProblem('a1'.repeat(40))).toMatch(/72/);
+  });
+});
+
+describe('digitsOnly', () => {
+  it('strips everything but digits', () => {
+    expect(digitsOnly('+91 98765-43210')).toBe('919876543210');
+    expect(digitsOnly('abc')).toBe('');
   });
 });

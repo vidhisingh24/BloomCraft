@@ -26,7 +26,6 @@ describe('WhatsApp message builders', () => {
         {
           id: 'kc-tulip-pink-duo-item',
           productId: 'kc-tulip-pink-duo',
-          product: {} as any,
           name: 'Baby Pink Double Tulip Bell Charm',
           image: '/images/keychains/tulip_pink_duo.jpg',
           quantity: 2,

@@ -20,7 +20,7 @@ export function buildOrderMessage(order: Order): string {
     .map((item, i) => {
       const colorText = item.selectedColor ? ` [${item.selectedColor}]` : '';
       const noteText = item.customNote ? ` (Personalization: "${item.customNote}")` : '';
-      return `${i + 1}. *${item.name || item.product?.name || 'Crochet Item'}*${colorText} × ${item.quantity}${noteText} — ${formatPaise((item.priceAtAdd || 0) * item.quantity)}`;
+      return `${i + 1}. *${item.name}*${colorText} × ${item.quantity}${noteText} — ${formatPaise((item.priceAtAdd || 0) * item.quantity)}`;
     })
     .join('\n');
 
@@ -36,7 +36,7 @@ export function buildOrderMessage(order: Order): string {
     deliverySummary = `📦 *Parcel Delivery*\n• Address: ${d.house ? `${d.house}, ${d.street}, ${d.area}` : 'Provided in order'}\n• City & State: ${d.city || 'Vadodara'}, ${d.state || 'Gujarat'} - ${d.pincode || ''}`;
   }
 
-  const paymentLabel = order.payment.method === 'gpay' || order.payment.method === 'Google Pay (G.Pay)' ? 'Google Pay (G.Pay)' : order.payment.method === 'upi' ? 'UPI (Online)' : 'Cash / Pay on Handover';
+  const paymentLabel = order.payment.method === 'upi' ? 'UPI (Online)' : 'Cash / Pay on Handover';
   const paymentText = `💳 *Payment Method:* ${paymentLabel} (${order.payment.status.toUpperCase()})${order.payment.upiTxnRef ? `\n• Ref: ${order.payment.upiTxnRef}` : ''}`;
 
   return `🌸 *BLOOMCRAFT ORDER — ${order.id}* 🌸

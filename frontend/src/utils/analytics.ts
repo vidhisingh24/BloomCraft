@@ -23,7 +23,7 @@ export function trackEvent(
 ): void {
   try {
     if (typeof window !== 'undefined') {
-      // In development / demo, we can log or emit a custom event
+      // Development builds can log events here
       if (import.meta.env?.DEV) {
         // console.debug(`[Analytics Event] ${eventName}:`, payload);
       }
